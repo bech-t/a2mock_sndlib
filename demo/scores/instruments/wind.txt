@@ -1,0 +1,35 @@
+# Test d'instrument -- percussion souffle tenu : vent, ressac -- notes longues, pas de rythme.
+#
+# Meme accompagnement que les deux autres percussions de ce dossier : seule
+# la voix C change. Avec un instrument de bruit, la hauteur ecrite ne choisit
+# pas une note mais le GRAIN : grave = sourd, aigu = claquant (cf.
+# docs/partitions.md). Une seule voix de bruit par puce -- la C est seule ici.
+#
+#   voix A : arpege mineur, pour l'assise harmonique
+#   voix B : basse pincee
+#   voix C : percussion, en wind -- souffle tenu : vent, ressac -- notes longues, pas de rythme
+#
+title: TEST WIND
+author: A2MOCK
+tempo: 120
+hz: 50
+loop: yes
+
+voice A: minor
+voice B: bass
+voice C: wind
+
+A: a3/4 a3/4 a3/4 a3/4
+A: a3/4 a3/4 a3/4 a3/4
+A: f3/4 f3/4 g3/4 g3/4
+A: a3/4 a3/4 a3/4 a3/4
+
+B: a1/8 r/8 a1/8 r/8 e2/8 r/8 a1/8 r/8
+B: a1/8 r/8 a1/8 r/8 e2/8 r/8 a1/8 r/8
+B: f1/8 r/8 f1/8 r/8 g1/8 r/8 g1/8 r/8
+B: a1/8 r/8 e2/8 r/8 a1/8 r/8 e2/8 r/8
+
+C: c2/1
+C: c2/1
+C: d2/1
+C: c2/2 r/2

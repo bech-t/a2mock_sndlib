@@ -143,7 +143,15 @@ $(BUILDDIR)/demo_%.o: demo/src/%.c | $(BUILDDIR)
 # Une fausse note se corrige dans le .txt, pas dans le code.
 SCORES  := $(wildcard demo/scores/*.txt)
 SCORETUNES := $(patsubst demo/scores/%.txt,demo/music/%.A2M,$(SCORES))
-TUNES      := $(SCORETUNES)
+
+# Un module par instrument du catalogue (cf. demo/scores/instruments/) : sert
+# a l'ecran TIMBRES de la demo (instr_tunes[] dans demo/src/tests.c), separe
+# de la playlist ci-dessus -- ce sont des outils de comparaison, pas des
+# morceaux choisis pour la vitrine.
+INSTR_SCORES := $(wildcard demo/scores/instruments/*.txt)
+INSTRTUNES   := $(patsubst demo/scores/instruments/%.txt,demo/music/instruments/%.A2M,$(INSTR_SCORES))
+
+TUNES      := $(SCORETUNES) $(INSTRTUNES)
 
 # midi2score.py fabrique dragee3.txt et cafe3.txt a partir des MIDI ; une fois
 # engendrees, ces partitions se CORRIGENT a la main -- on ne les regenere donc
@@ -263,13 +271,17 @@ music: $(TUNES)
 
 # Les seules partitions texte : convertibles sur un clone nu, sans un seul
 # telechargement. C'est la cible a proposer a qui decouvre le depot.
-scores: $(SCORETUNES)
+scores: $(SCORETUNES) $(INSTRTUNES)
 
 # Les partitions texte donnent des modules a TROIS voix (un seul AY) en profil
 # T : quelques centaines d'octets, et l'AY #2 reste libre pour les bruitages.
 # Le nom du fichier suit celui de la partition, en majuscules.
 demo/music/%.A2M: demo/scores/%.txt $(A2MCONV) tools/a2mconv/a2m.py tools/a2mconv/render.py
 	@mkdir -p demo/music
+	@python3 $(A2MCONV) $< -o $@
+
+demo/music/instruments/%.A2M: demo/scores/instruments/%.txt $(A2MCONV) tools/a2mconv/a2m.py tools/a2mconv/render.py
+	@mkdir -p demo/music/instruments
 	@python3 $(A2MCONV) $< -o $@
 
 dsk: $(DSK)
@@ -281,8 +293,18 @@ $(DSK): $(DEMOBIN) $(TUNES) $(PRODOS_TPL) $(AC_JAR) $(LOADER) | $(BUILDDIR)
 	java -jar $(AC_JAR) -p  $@ $(PROGRAM).SYSTEM sys < $(LOADER)
 	@# Les modules, en type BIN/aux 0 : donnee brute, pas une image a charger
 	@# telle quelle. Le nom sur la disquette est celui qu'attend tests.c.
-	@for m in $(TUNES); do \
+	@for m in $(SCORETUNES) $(MIDITUNES); do \
 	  n=$$(basename $$m); \
+	  echo "  + $$n"; \
+	  java -jar $(AC_JAR) -p $@ $$n bin 0 < $$m; \
+	done
+	@# TIMBRES/ : sous-repertoire ProDOS, pour ne compter que pour UNE entree
+	@# dans la racine (25 max sur ce gabarit -- programme + 10 morceaux +
+	@# 15 timbres a plat l'auraient depassee). `-p` avec un "/" dans le nom
+	@# cree le sous-repertoire tout seul. Les chemins ici doivent correspondre
+	@# EXACTEMENT a instr_tunes[] dans demo/src/tests.c.
+	@for m in $(INSTRTUNES); do \
+	  n=TIMBRES/$$(basename $$m); \
 	  echo "  + $$n"; \
 	  java -jar $(AC_JAR) -p $@ $$n bin 0 < $$m; \
 	done

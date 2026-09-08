@@ -308,6 +308,25 @@ static const char *const tunes[] = {
 };
 #define N_TUNES (sizeof(tunes) / sizeof(tunes[0]))
 
+/* Un module par instrument du catalogue (cf. demo/scores/instruments/), pour
+ * les comparer a l'oreille sans quitter la disquette. Meme melodie pour les
+ * sept timbres, meme progression pour les cinq accords, meme accompagnement
+ * pour les trois percussions -- seul l'instrument change d'un fichier a
+ * l'autre. Tous a 3 voix, un seul AY : X reste disponible partout. */
+/* Sous-repertoire TIMBRES/ : la racine ProDOS de cette disquette n'a la place
+ * que pour 25 entrees (le gabarit ne l'agrandit pas), et programme + 10
+ * morceaux + 15 timbres l'auraient depassee. Un sous-dossier ne compte que
+ * pour UNE entree en racine, quel que soit ce qu'il contient. */
+static const char *const instr_tunes[] = {
+    "TIMBRES/PLUCK.A2M", "TIMBRES/BASS.A2M",              /* tons simples */
+    "TIMBRES/SUSTAIN.A2M", "TIMBRES/SOFT.A2M",
+    "TIMBRES/ORGAN.A2M", "TIMBRES/PIANO.A2M", "TIMBRES/BRASS.A2M",
+    "TIMBRES/MAJOR.A2M", "TIMBRES/MINOR.A2M",             /* accords sur 1 voix */
+    "TIMBRES/SEVENTH.A2M", "TIMBRES/FIFTH.A2M", "TIMBRES/OCTAVE.A2M",
+    "TIMBRES/DRUM.A2M", "TIMBRES/CYMBAL.A2M", "TIMBRES/WIND.A2M"  /* percussions */
+};
+#define N_INSTR (sizeof(instr_tunes) / sizeof(instr_tunes[0]))
+
 /* Charge un module. Renvoie 0 si le fichier manque ou n'est pas un A2M. */
 /* Le tick doit faire avancer les DEUX : la musique et l'effet arme. C'est le
  * cas d'usage d'un jeu, et c'est ce qui prouve que le lecteur ne s'approprie
@@ -345,7 +364,10 @@ static void put16(const char *p)
         cputc(p[i]);
 }
 
-void t_music(void)
+/* Coeur commun a MUSIQUE et TIMBRES : meme ecran, meme clavier, seule la
+ * liste change. `heading` fait exactement 7 caracteres -- comme "MUSIQUE" et
+ * "TIMBRES" -- pour garder l'alignement de "/A2MB/" sans le recalculer. */
+static void module_screen(const char *heading, const char *const *list, u8 n)
 {
     u8  k, i, sel = 0, loaded = 0, redraw = 1;
     u16 last = 0, tot;
@@ -354,7 +376,7 @@ void t_music(void)
     for (;;) {
         if (redraw) {
             clrscr();
-            cprintf("MUSIQUE                       /A2MB/\r\n");
+            cprintf("%s                       /A2MB/\r\n", heading);
             cprintf("---------------------------------------");   /* 39, pas 40 :
              * la 40e colonne d'un ecran 40 colonnes fait passer a la ligne,
              * donc defiler tout l'ecran -- et la liste perd une entree. */
@@ -363,16 +385,21 @@ void t_music(void)
             /* Trois colonnes, et SANS le suffixe .A2M : quinze morceaux ne
              * tiennent pas autrement, et l'extension est la meme pour tous --
              * elle n'apprend rien et coute cinq colonnes par entree. */
-            for (i = 0; i < N_TUNES; ++i) {
-                u8 j;
+            for (i = 0; i < n; ++i) {
+                u8 j, j0 = 0;
                 gotoxy((u8)((i % 3) * 13), (u8)(2 + i / 3));
                 cprintf("%c.", touche(i));
-                for (j = 0; tunes[i][j] && tunes[i][j] != '.'; ++j)
-                    cputc(tunes[i][j]);
-                for (; j < 10; ++j)
+                /* Saute un eventuel "SOUSREP/" : seul le NOM s'affiche, le
+                 * chemin complet reste dans list[] pour le fopen(). */
+                for (j = 0; list[i][j]; ++j)
+                    if (list[i][j] == '/')
+                        j0 = (u8)(j + 1);
+                for (j = j0; list[i][j] && list[i][j] != '.'; ++j)
+                    cputc(list[i][j]);
+                for (j = (u8)(j - j0); j < 10; ++j)
                     cputc(' ');
             }
-            gotoxy(0, 2 + (N_TUNES + 2) / 3);
+            gotoxy(0, 2 + (n + 2) / 3);
             cprintf("---------------------------------------");   /* 39, pas 40 :
              * la 40e colonne d'un ecran 40 colonnes fait passer a la ligne,
              * donc defiler tout l'ecran -- et la liste perd une entree. */
@@ -386,11 +413,16 @@ void t_music(void)
              * cas. Une legende qui annonce une touche inoperante est pire que
              * pas de legende. */
             /* Touches : les chiffres 1-9, puis A et suivantes (cf. touche()).
-             * La legende est ecrite pour la liste ACTUELLE. Une cascade de
-             * `if` sur N_TUNES serait du code mort -- c'est une constante de
-             * compilation, et cc65 le signale a juste titre. Si la liste
-             * depasse A, etendre cette ligne a la main. */
-            cprintf("1-9,A charger  P pause  S stop  Q sortie");
+             * `n` est un PARAMETRE, pas une constante -- module_screen() sert
+             * MUSIQUE (10 entrees) et TIMBRES (15) : la legende doit refleter
+             * la liste vraiment affichee, donc ce `if` est necessaire, pas du
+             * code mort. Au-dela de 15 (touche 'F'), etendre a la main. */
+            if (n <= 9)
+                cprintf("1-%c charger  P pause  S stop  Q sortie", touche((u8)(n - 1)));
+            else if (n == 10)
+                cprintf("1-9,A charger  P pause  S stop  Q sortie");
+            else
+                cprintf("1-9,A-%c charger  P pause  S stop  Q sortie", touche((u8)(n - 1)));
             redraw = 0;
             last = 0;
         }
@@ -451,12 +483,12 @@ void t_music(void)
         if (k >= '1' && k <= '9')                 sel = (u8)(k - '1');
         else if (k >= 'A' && k <= 'F')            sel = (u8)(9 + k - 'A');
         else if (k >= 'a' && k <= 'f')            sel = (u8)(9 + k - 'a');
-        if (sel < N_TUNES) {
+        if (sel < n) {
             a2m_stop();
             mbt_stop();
-            if (!load_tune(tunes[sel])) {
+            if (!load_tune(list[sel])) {
                 clrscr();
-                cprintf("\r\n%s : introuvable ou pas un A2M.\r\n", tunes[sel]);
+                cprintf("\r\n%s : introuvable ou pas un A2M.\r\n", list[sel]);
                 loaded = 0;
                 pause();
                 redraw = 1;
@@ -489,3 +521,6 @@ void t_music(void)
     mbt_hook(0);
     mb_silence();
 }
+
+void t_music(void)       { module_screen("MUSIQUE", tunes,       N_TUNES); }
+void t_instruments(void) { module_screen("TIMBRES", instr_tunes, N_INSTR); }

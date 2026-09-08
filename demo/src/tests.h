@@ -10,5 +10,6 @@ void t_voices(void);      /* les six voies, puis une enveloppe              */
 void t_tick(void);        /* la base de temps bat-elle toute seule ?        */
 void t_fx(void);          /* banc d'essai des bruitages non bloquants       */
 void t_music(void);       /* lecture de modules A2M depuis la disquette     */
+void t_instruments(void); /* un module par instrument du catalogue          */
 
 #endif

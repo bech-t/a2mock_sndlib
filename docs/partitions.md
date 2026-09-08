@@ -177,13 +177,25 @@ par trame.
 | `bass` | 14 | immédiate | 1,62 pas/trame | 0 | 1,62 | pizzicato, plus sec encore |
 | `sustain` | 14 | ~5 trames | 0,12 pas/trame | 8 | 4 pas/trame | tenue, avec une fin nette |
 | `soft` | 13 | 13 trames | aucun | 13 | 4 pas/trame | cordes, nappes |
+| `organ` | 15 | immédiate | aucun | 15 | 2,5 pas/trame | plateau plein, sans attaque ni déclin |
+| `piano` | 15 | immédiate | 0,31 pas/trame | 5 | 1,5 pas/trame | frappe nette, puis long déclin continu |
+| `brass` | 15 | ~4 trames | 0,62 pas/trame | 12 | 3 pas/trame | attaque soufflée, plateau éclatant |
 
 `pluck` et `bass` **s'éteignent seuls** : la note meurt avant la fin de sa
 durée écrite si celle-ci est longue. C'est ce qui donne le grain « boîte à
 musique » plutôt qu'un orgue.
 
-`sustain` et `soft` **tiennent** jusqu'au silence suivant. Écrivez donc vos
-silences.
+`sustain`, `soft`, `organ`, `piano` et `brass` **tiennent** jusqu'au silence
+suivant. Écrivez donc vos silences.
+
+Sur cette seule enveloppe d'amplitude, la distinction se joue à deux endroits :
+la **vitesse d'attaque** (`organ` et `piano` sautent d'un coup à leur crête,
+comme une vraie touche d'orgue ou un marteau de piano ; `brass` monte en
+quatre trames, le souffle qui s'installe ; `soft` prend son temps, treize
+trames, pour la nappe qui enfle) et l'**écart entre crête et tenue** (`organ`
+n'en a aucun — plateau franc, sans déclin — quand `piano` retombe loin sous sa
+crête pour simuler l'amortissement continu d'une corde qu'on ne peut pas
+vraiment reproduire avec deux seuls paliers).
 
 ### Accords sur une seule voie — l'arpège
 

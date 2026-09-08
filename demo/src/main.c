@@ -102,12 +102,13 @@ int main(void)
         cprintf("  3. la base de temps (IRQ)\r\n");
         cprintf("  4. les bruitages\r\n");
         cprintf("  5. MUSIQUE (modules A2M)\r\n");
+        cprintf("  6. TIMBRES (test d'instruments)\r\n");
         cprintf("\r\n  S. changer de slot\r\n");
         cprintf("  Q. quitter\r\n");
         cprintf("\r\nchoix : ");
 
         k = cgetc();
-        if (k >= '1' && k <= '5')
+        if (k >= '1' && k <= '6')
             contexte_propre();          /* avant : la carte est a nous seule */
 
         switch (k) {
@@ -116,6 +117,7 @@ int main(void)
         case '3': if (ready) t_tick();   break;
         case '4': if (ready) t_fx();     break;
         case '5': if (ready) t_music(); break;
+        case '6': if (ready) t_instruments(); break;
         case 's': case 'S':
             contexte_propre();
             slot  = pick_slot();
@@ -135,7 +137,7 @@ int main(void)
         default: break;
         }
 
-        if (k >= '1' && k <= '5') {
+        if (k >= '1' && k <= '6') {
             /* Apres : l'epreuve 1 a SONDE le slot, ce qui reprogramme le timer
              * T1 de la VIA #1 -- c'est ainsi qu'on reconnait un 6522. Sans
              * cette reinitialisation, l'ecran suivant demarre sur une base de

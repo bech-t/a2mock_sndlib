@@ -27,9 +27,12 @@ history/
 # correspond qui gagne. `make clean` l'epargne (cf. Makefile).
 !build/a2mb-test.dsk
 
-# Modules convertis : TOUJOURS regeneres par `make music` depuis demo/music/*.pt3
+# Modules convertis : TOUJOURS regeneres par `make music` depuis les .txt de
+# demo/scores/ (et son sous-dossier instruments/, pour l'ecran TIMBRES).
 demo/music/*.A2M
 demo/music/*.a2m
+demo/music/instruments/*.A2M
+demo/music/instruments/*.a2m
 
 # Outils Python
 __pycache__/

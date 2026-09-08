@@ -338,6 +338,10 @@ INSTRUMENTS = {
     "sustain": (14, 48,  2,  8, 64, 0, 0, 0),   # tenue, fin nette
     "soft":    (13, 16,  0, 13, 64, 0, 0, 0),   # cordes, nappes
 
+    "organ":   (15,  0,  0, 15, 40, 0, 0, 0),   # plateau plein, sans attaque ni declin
+    "piano":   (15,  0,  5,  5, 24, 0, 0, 0),   # frappe nette puis long declin continu
+    "brass":   (15, 64, 10, 12, 48, 0, 0, 0),   # attaque soufflee, plateau eclatant
+
     # --- accords sur UNE voie (arpege a 3 pas, une note par trame) --------
     "major":   (15,  0, 14,  0, 17, 0, 4, 7),
     "minor":   (15,  0, 14,  0, 17, 0, 3, 7),

@@ -1,0 +1,47 @@
+# Test d'instrument -- accord septieme -- 0, 4, 10.
+#
+# Meme progression que les quatre autres pieces d'accords de ce dossier :
+# une voie, un accord par mesure, l'AY reecrit trois notes par trame pour
+# donner l'illusion d'un accord (l'arpege chiptune). Seul l'intervalle
+# change d'un fichier a l'autre.
+#
+#   voix A : la progression, en seventh -- septieme -- 0, 4, 10
+#   voix B : silencieuse (l'accord occupe deja tout le registre)
+#   voix C : basse, racine de chaque accord une octave plus bas
+#
+title: TEST SEVENTH
+author: A2MOCK
+tempo: 100
+hz: 50
+loop: yes
+
+voice A: seventh
+voice B: bass
+voice C: bass
+
+A: c4/1
+A: f4/1
+A: g4/1
+A: c4/1
+A: a3/1
+A: f3/1
+A: g3/1
+A: c4/1
+
+B: r/1
+B: r/1
+B: r/1
+B: r/1
+B: r/1
+B: r/1
+B: r/1
+B: r/1
+
+C: c3/1
+C: f2/1
+C: g2/1
+C: c3/1
+C: a2/1
+C: f2/1
+C: g2/1
+C: c3/1

@@ -23,41 +23,36 @@ Ce document explique ce qu'il fait, et les quatre règles qui ne se devinent pas
 
 ### Payez ce que vous nommez
 
-Le lieur cc65 prend les modules **un par un** dans la bibliothèque. Ce n'est
-pas une promesse, c'est mesurable au `ld65 -m` :
+Le lieur cc65 prend les modules **un par un** dans la bibliothèque : ce qu'un
+programme n'appelle pas n'est pas lié, aucun `#define` requis pour ça. Mesuré
+au `ld65 -m` sur cinq programmes minimaux, un par cas d'usage :
 
-| ce que le programme appelle | taille | modules liés |
+| ce que le programme appelle | ~ taille | modules liés |
 |---|---|---|
-| `mb_init` + `mb_reg` | **1 600 o** | `mb_card` `mb_io` |
-| + `mbt_start_poll` + bruitages | **3 419 o** | + `mb_fx` `mb_notes` `mb_time` |
-| + `mbt_start_irq` | 3 948 o | + `mb_irq` `mb_prodos` `mb_time_irq` |
-| + `a2m_play_r` (profil R seul) | **5 062 o** | + `a2m_core` `a2m_r` |
-| + `a2m_play_t` (profil T seul) | **6 273 o** | + `a2m_core` `a2m_t` |
-| + `a2m_play` (les deux) | 8 418 o | + `a2m_any` `a2m_r` `a2m_t` |
+| `mb_init` + `mb_reg` (la carte, rien d'autre) | **~1,5 Ko** | `mb_card` `mb_io` |
+| + `mbt_start_poll` + bruitages, pas de lecteur | **~3,5 Ko** | + `mb_fx` `mb_notes` `mb_time` |
+| + `mbt_start_irq`, sans bruitages ni lecteur | ~3 Ko | + `mb_irq` `mb_prodos` `mb_time_irq` |
+| `a2m_play_r` — profil R seul | **~5 Ko** | + `a2m_core` `a2m_r` |
+| `a2m_play_t` — profil T seul | **~6,5 Ko** | + `a2m_core` `a2m_t` `mb_notes` |
+| `a2m_play` — les deux profils | ~8 Ko | + `a2m_any` `a2m_r` `a2m_t` |
 
-Taille de chaque morceau du lecteur :
-
-| | |
-|---|---|
-| `a2m_core` — API, état, aiguillage | 631 o |
-| `a2m_r` — décodeur de registres | 1 197 o |
-| `a2m_t` — moteur à instruments | 2 263 o |
-| `a2m_any` — `a2m_play()` | 53 o |
-
-Aucun `#define` n'est nécessaire pour ça, et il n'y en a pas : c'est
-l'édition de liens qui trie.
+Ces tailles sont des **ordres de grandeur**, pas des constantes : elles
+bougent avec la version de cc65 et les options d'optimisation. Ce qui ne
+bouge pas, c'est l'écart entre les lignes — et l'absence, vérifiée sur le
+binaire, du module qui n'a pas été nommé.
 
 Deux conséquences pratiques :
 
-- le lecteur A2M pèse 4 Ko et **n'est pas lié** si vous ne l'appelez pas ;
+- le lecteur A2M pèse dans les 3 à 5 Ko et **n'est pas lié** si vous ne
+  l'appelez pas ;
 - `mbt_start(latch, mode)` référence les **deux** chemins, donc l'appeler
   embarque le handler d'interruption et l'appel ProDOS même si vous demandez
   `MBT_POLL`. Une application qui se contente de la scrutation appelle
-  `mbt_start_poll()` directement et économise ~530 octets ;
+  `mbt_start_poll()` directement et économise environ 1 Ko ;
 - de même, `a2m_play()` lit le profil dans l'en-tête et appelle le bon
   moteur — donc elle les **nomme tous les deux**. Si vous ne diffusez que vos
   propres modules, vous connaissez leur profil : `a2m_play_t()` économise
-  **2 145 octets**, `a2m_play_r()` en économise **3 356**.
+  environ **1,5 Ko**, `a2m_play_r()` environ **2,7 Ko**.
 
 C'est la même règle partout : **on paie ce qu'on nomme**.
 

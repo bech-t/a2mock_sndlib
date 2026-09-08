@@ -1,0 +1,46 @@
+# Test d'instrument -- celesta, boite a musique -- s'eteint seule, ecoutez le grain sec.
+#
+# Meme melodie que les six autres pieces de tons simples de ce dossier :
+# seul l'instrument change. Enchainez-les pour comparer les enveloppes a
+# l'oreille, une seule variable a la fois.
+#
+#   voix A : mélodie, en pluck
+#   voix B : la meme, harmonisee a la tierce inferieure, en pluck
+#   voix C : basse pincee, pour l'assise (voix independante de l'AY #1)
+#
+title: TEST PLUCK
+author: A2MOCK
+tempo: 100
+hz: 50
+loop: yes
+
+voice A: pluck
+voice B: pluck
+voice C: bass
+
+A: c4/4 e4/4 g4/4 e4/4
+A: f4/4 e4/4 d4/4 c4/4
+A: e4/4 g4/4 c5/4 g4/4
+A: a4/4 g4/4 f4/4 e4/4
+A: d4/4 f4/4 a4/4 g4/4
+A: f4/4 e4/4 d4/4 c4/4
+A: e4/4 g4/4 c5/4 e5/4
+A: d5/4 c5/4 g4/4 r/4
+
+B: a3/4 c4/4 e4/4 c4/4
+B: d4/4 c4/4 b3/4 a3/4
+B: c4/4 e4/4 a4/4 e4/4
+B: f4/4 e4/4 d4/4 c4/4
+B: b3/4 d4/4 f4/4 e4/4
+B: d4/4 c4/4 b3/4 a3/4
+B: c4/4 e4/4 a4/4 c5/4
+B: b4/4 a4/4 e4/4 r/4
+
+C: c3/1
+C: f2/1
+C: c3/1
+C: f2/1
+C: d3/1
+C: f2/1
+C: c3/1
+C: g2/1
