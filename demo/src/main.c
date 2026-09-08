@@ -30,7 +30,7 @@ static u8 pick_slot(void)
 
     for (;;) {
         clrscr();
-        cprintf("a2mock_sndlib -- validation M0/M2\r\n");
+        cprintf("a2mock_sndlib -- mockingboard\r\n");
         cprintf("=================================\r\n\n");
 
         cprintf("DANS QUEL SLOT EST LA CARTE ?\r\n\n");
@@ -92,7 +92,7 @@ int main(void)
 
     for (;;) {
         clrscr();
-        cprintf("a2mock_sndlib -- validation M0/M2\r\n");
+        cprintf("a2mock_sndlib -- mockingboard\r\n");
         cprintf("=================================\r\n\n");
         if (ready) cprintf("carte : slot %u\r\n\n", slot);
         else       cprintf("carte : AUCUNE (epreuve 1 seule)\r\n\n");

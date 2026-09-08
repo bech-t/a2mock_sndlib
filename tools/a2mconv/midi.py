@@ -32,7 +32,7 @@ def read(path):
     fmt, ntrk, div = struct.unpack(">HHH", b[8:14])
     assert div & 0x8000 == 0, "division SMPTE non geree"
     i = 14
-    tracks, tempos = [], [(0, 500000)]     # (tick, microsecondes par noire)
+    tracks, tempos = [], []                # (tick, microsecondes par noire)
     names = {}
     for tk in range(ntrk):
         assert b[i:i+4] == b"MTrk", "piste attendue"
@@ -77,5 +77,18 @@ def read(path):
         notes.sort(key=lambda n: (n.t, -n.pitch))
         tracks.append(notes)
         i = end
-    tempos.sort()
+    # Tri par TICK SEUL, stable : deux « Set Tempo » sur le meme tick ne sont
+    # pas ambigus dans un vrai MIDI, l'ORDRE dans le fichier tranche (le
+    # second efface le premier). Trier par (tick, microsecondes) -- comme
+    # avant -- les aurait a la place classes par VALEUR, ce qui pouvait faire
+    # gagner le mauvais des deux : le tempo par defaut ci-dessous, ajoute
+    # inconditionnellement au tick 0, entrait alors en concurrence avec un
+    # tempo REELLEMENT declare au meme tick, et le plus lent des deux gagnait
+    # au hasard de la comparaison numerique -- jamais a l'oreille, mais un
+    # Debussy marque a 144 pouvait ainsi se retrouver joue a 120 sans qu'aucun
+    # message ne le signale. `sort()` de Python est stable : ceci ne rejoue
+    # pas ce piege, l'ORDRE D'ARRIVEE des evenements reels est preserve.
+    tempos.sort(key=lambda x: x[0])
+    if not tempos or tempos[0][0] != 0:
+        tempos.insert(0, (0, 500000))      # aucun tempo declare au debut -- repli 120 bpm
     return {"division": div, "tracks": tracks, "tempos": tempos, "names": names}

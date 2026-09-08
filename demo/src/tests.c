@@ -305,7 +305,7 @@ static const char *const tunes[] = {
     "ELISE.A2M", "MENUET.A2M", "JOIE.A2M",  /* 3 voix, 1 AY : l'AY #2 reste
                                              * libre pour les bruitages */
     "RYTHME.A2M",                           /* arpeges + percussion */
-    "ARABESQUE.A2M"                         /* 3 voix, 1 AY : premier jet, jamais ecoute */
+    "ARABESQUE.A2M"                         /* 6 voix, 2 AY : premier jet, jamais ecoute */
 };
 #define N_TUNES (sizeof(tunes) / sizeof(tunes[0]))
 
