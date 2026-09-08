@@ -343,11 +343,15 @@ INSTRUMENTS = {
     "brass":   (15, 64, 10, 12, 48, 0, 0, 0),   # attaque soufflee, plateau eclatant
 
     # --- accords sur UNE voie (arpege a 3 pas, une note par trame) --------
-    "major":   (15,  0, 14,  0, 17, 0, 4, 7),
-    "minor":   (15,  0, 14,  0, 17, 0, 3, 7),
-    "seventh": (15,  0, 14,  0, 17, 0, 4, 10),
-    "fifth":   (15,  0, 14,  0, 17, 0, 7, 12),
-    "octave":   (15,  0, 16,  0, 17, 0, 12, 0),
+    # `tenue` non nulle : contrairement a pluck/bass, l'accord doit rester
+    # audible (et continuer de s'arpeger, cf. a2m_t.c:t_envelopes) pendant
+    # toute la duree de la note -- sinon la ronde des fichiers de test
+    # s'eteint en ~0,3 s et le reste n'est que du silence.
+    "major":   (15,  0, 14,  8, 17, 0, 4, 7),
+    "minor":   (15,  0, 14,  8, 17, 0, 3, 7),
+    "seventh": (15,  0, 14,  8, 17, 0, 4, 10),
+    "fifth":   (15,  0, 14,  8, 17, 0, 7, 12),
+    "octave":   (15,  0, 16,  8, 17, 0, 12, 0),
 
     # --- percussions (bruit ; la hauteur ecrite regle le grain) -----------
     "drum":    (15,  0, 30,  0, 30, FLAG_BRUIT, 0, 0),   # sec : caisse, grosse
