@@ -58,9 +58,14 @@
 #define A2M_BUF_LOW   ((u8 *)0x0800)
 #define A2M_BUFSZ_LOW  6144
 
-/* Valide l'en-tete d'un module deja en memoire. 0 = refuse (magie absente,
- * version ou profil inconnu). Ne joue rien. */
-u8 __fastcall__ a2m_check(const u8 *mod);
+/* Valide l'en-tete d'un module deja en memoire. `len` est le nombre d'octets
+ * REELLEMENT charges a partir de `mod` -- PAS une taille lue dans le fichier
+ * lui-meme, qu'on ne peut pas croire sur parole (secteur illisible, copie
+ * interrompue : le disque peut rendre moins d'octets que prevu). 0 = refuse
+ * (magie absente, version/profil inconnu, ou en-tete plus longue que `len`).
+ * Ne joue rien. Passez le MEME `len` a a2m_play_t()/_r()/() ensuite : c'est
+ * lui qui borne tout le flux, trame par trame -- cf. docs/integration.md. */
+u8 __fastcall__ a2m_check(const u8 *mod, u16 len);
 
 /* Titre / auteur, lus dans l'en-tete. Chaines de 16 caracteres NON terminees
  * par zero : a afficher avec une largeur fixe. Ils sont dans l'en-tete
@@ -76,9 +81,19 @@ u16 __fastcall__ a2m_frames(const u8 *mod);   /* duree totale, en trames */
 u8  __fastcall__ a2m_profile(const u8 *mod);  /* 'R' ou 'T' */
 u16 __fastcall__ a2m_latch(const u8 *mod);
 
-/* Arme la lecture. `loop` non nul reboucle a la fin (l'en-tete porte aussi son
- * propre drapeau de boucle ; celui-ci le force). Ne joue pas : c'est le tick
- * qui fait avancer. */
+/* Arme la lecture. `len` est le nombre d'octets REELLEMENT charges a partir de
+ * `mod` -- le MEME que celui passe a a2m_check(). C'est lui, et rien d'autre,
+ * qui borne chaque lecture du flux pendant la partition entiere : un module
+ * tronque (secteur illisible, copie interrompue) arrete proprement la lecture
+ * au lieu de continuer dans la memoire qui suit le tampon -- potentiellement
+ * votre PROGRAMME, charge juste au-dessus d'A2M_BUF (cf. plus haut). Se
+ * trompe de `len` (par exemple `A2M_BUFSZ` au lieu des octets vraiment lus)
+ * annule cette protection : le lecteur croirait le tampon plein alors qu'il
+ * ne l'est pas.
+ *
+ * `loop` non nul reboucle a la fin (l'en-tete porte aussi son propre drapeau
+ * de boucle ; celui-ci le force). Ne joue pas : c'est le tick qui fait
+ * avancer. */
 /* --- Demarrage : trois portes, payez ce que vous nommez ------------------
  *
  * a2m_play_t()  n'embarque que le moteur du profil T (notes + instruments).
@@ -88,9 +103,9 @@ u16 __fastcall__ a2m_latch(const u8 *mod);
  *
  * Une application qui ne diffuse que ses propres modules connait leur profil :
  * elle a tout interet a appeler directement le moteur voulu. */
-void __fastcall__ a2m_play_t(const u8 *mod, u8 loop);
-void __fastcall__ a2m_play_r(const u8 *mod, u8 loop);
-void __fastcall__ a2m_play(const u8 *mod, u8 loop);
+void __fastcall__ a2m_play_t(const u8 *mod, u16 len, u8 loop);
+void __fastcall__ a2m_play_r(const u8 *mod, u16 len, u8 loop);
+void __fastcall__ a2m_play(const u8 *mod, u16 len, u8 loop);
 
 void a2m_stop(void);
 void __fastcall__ a2m_pause(u8 on);

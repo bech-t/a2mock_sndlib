@@ -30,6 +30,16 @@
 /* Etat commun aux deux moteurs. */
 extern const u8 *a2m_p;        /* prochaine trame / prochain evenement */
 extern const u8 *a2m_data0;    /* premiere trame : point de rebouclage */
+/* Un octet APRES le dernier octet REELLEMENT charge (mod + len passe a
+ * a2m_begin). Ce n'est PAS calcule depuis une taille annoncee par le fichier :
+ * un module tronque (secteur illisible, copie interrompue) ne doit jamais
+ * faire croire au lecteur qu'il dispose de plus d'octets que ce qui a
+ * vraiment ete lu. Chaque moteur DOIT verifier `a2m_p < a2m_end` avant de
+ * consommer un octet du flux -- c'est la seule digue entre un fichier
+ * corrompu et le lecteur qui se met a lire la memoire au hasard (voisine du
+ * tampon module, donc potentiellement le programme charge juste au-dessus,
+ * cf. a2m.h). */
+extern const u8 *a2m_end;
 extern u8  a2m_st;             /* A2M_STOPPED | _PLAYING | _PAUSED     */
 extern u8  a2m_loop;
 extern u8  a2m_nay;
@@ -43,8 +53,9 @@ extern void (*a2m_engine)(void);
 u16 a2m_rd16(const u8 *p);
 
 /* Amorce commune : valide, remplit l'etat partage, remet les puces du module
- * a zero. Renvoie 0 si le module est refuse. */
-u8 a2m_begin(const u8 *mod, u8 loop);
+ * a zero. Renvoie 0 si le module est refuse. `len` est le nombre d'octets
+ * REELLEMENT charges a partir de `mod` -- cf. a2m_end ci-dessus. */
+u8 a2m_begin(const u8 *mod, u16 len, u8 loop);
 
 /* Remet a zero les puces du MODULE -- et elles seules. Appelee au demarrage
  * et A CHAQUE REBOUCLAGE : sans ca, les notes qui sonnaient continuent

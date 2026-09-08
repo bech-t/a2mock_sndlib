@@ -24,6 +24,15 @@ static const u8 mask_order[14] = { 8, 9, 10, 7, 0, 2, 4,  1, 3, 5, 6, 11, 12, 13
 static u8  rle;            /* trames identiques restant a tenir */
 static u8  amp_raw[2][3];  /* amplitude REELLE, avant attenuation */
 
+/* Refuse de lire `n` octets de plus si ca depasserait a2m_end -- cf. le
+ * commentaire sur a2m_end dans a2m_int.h. Une seule sortie possible : arreter
+ * proprement. Pas une boucle infinie sur de la memoire hors du module, pas
+ * des registres AY charges avec des octets pris au hasard plus loin en RAM.
+ * En MACRO et non en fonction : c'est appele a chaque champ variable d'une
+ * trame, et l'appel/retour couterait plus cher que le test lui-meme sur un
+ * 6502 (meme raisonnement que t_pitch() dans a2m_t.c). */
+#define R_NEED(n) do { if ((a2m_p + (n)) > a2m_end) { a2m_stop(); return; } } while (0)
+
 /* Ecrit une amplitude : valeur vraie gardee a part, valeur attenuee poussee. */
 static void set_amp(u8 ay, u8 ch, u8 v)
 {
@@ -49,11 +58,16 @@ static void r_frame(void)
         return;
     }
 
+    R_NEED(1);
     ctrl = *a2m_p++;
     if (ctrl == CTRL_END) {
         if (!a2m_loop) { a2m_stop(); return; }
         a2m_p = a2m_data0;
         a2m_no = 0;
+        /* a2m_data0 est verifie a l'AMORCE (a2m_check exige DATAOFF <= len),
+         * mais une garde ici coute une comparaison et couvre aussi le cas
+         * degenere ou le corps est vide (DATAOFF == len exactement). */
+        R_NEED(1);
         ctrl = *a2m_p++;
         if (ctrl == CTRL_END) { a2m_stop(); return; }
     }
@@ -62,6 +76,7 @@ static void r_frame(void)
      * Une trame sur deux ne dit que « telle voie baisse d'un cran ». Deux
      * octets pour les six voies, aucune valeur transportee. */
     if (ctrl & CTRL_AMP) {
+        R_NEED(2);
         packed = a2m_rd16(a2m_p);
         a2m_p += 2;
         for (k = 0; k < 6; ++k) {
@@ -82,22 +97,27 @@ static void r_frame(void)
 
     /* --- masques, avec bit de continuation ------------------------------ */
     if (ctrl & CTRL_MASK1) {
+        R_NEED(1);
         b = *a2m_p++;
         bits0 = (u8)(b & 0x7F);
-        if (b & 0x80) { hi0 = *a2m_p++; }
+        if (b & 0x80) { R_NEED(1); hi0 = *a2m_p++; }
     }
     if (ctrl & CTRL_MASK2) {
+        R_NEED(1);
         b = *a2m_p++;
         bits1 = (u8)(b & 0x7F);
-        if (b & 0x80) { hi1 = *a2m_p++; }
+        if (b & 0x80) { R_NEED(1); hi1 = *a2m_p++; }
     }
 
-    if (ctrl & CTRL_RLE)
+    if (ctrl & CTRL_RLE) {
+        R_NEED(1);
         rle = *a2m_p++;
+    }
 
     /* --- valeurs : AY #1 puis AY #2, dans l'ordre des bits de masque ----- */
     for (i = 0; i < 14; ++i) {
         if (i < 7 ? (bits0 & (1 << i)) : (hi0 & (1 << (i - 7)))) {
+            R_NEED(1);
             r = mask_order[i];
             v = *a2m_p++;
             if (r >= AY_AMP_A && r <= AY_AMP_C) set_amp(0, (u8)(r - AY_AMP_A), v);
@@ -107,6 +127,7 @@ static void r_frame(void)
     }
     for (i = 0; i < 14; ++i) {
         if (i < 7 ? (bits1 & (1 << i)) : (hi1 & (1 << (i - 7)))) {
+            R_NEED(1);
             r = mask_order[i];
             v = *a2m_p++;
             if (r >= AY_AMP_A && r <= AY_AMP_C) set_amp(1, (u8)(r - AY_AMP_A), v);
@@ -122,9 +143,9 @@ static void r_frame(void)
 }
 
 
-void __fastcall__ a2m_play_r(const u8 *mod, u8 loop)
+void __fastcall__ a2m_play_r(const u8 *mod, u16 len, u8 loop)
 {
-    if (!a2m_begin(mod, loop))
+    if (!a2m_begin(mod, len, loop))
         return;
     rle = 0;
     amp_raw[0][0] = amp_raw[0][1] = amp_raw[0][2] = 0;

@@ -112,13 +112,39 @@ static const u8 *loop_pos;
 
 static void t_init(const u8 *mod)
 {
+    /* a2m_check a deja garanti DATAOFF <= a2m_end (mod + len), donc `p` lui-
+     * meme est dans les clous -- mais rien ne garantit qu'il y ait la place
+     * pour ne serait-ce que l'octet de COMPTE qui suit, encore moins pour la
+     * table entiere : c'est justement ce qu'une troncature abimerait. */
     const u8 *p = mod + a2m_rd16(mod + H_DATAOFF);
     u8 i, k;
+
+    if (p >= a2m_end) {
+        /* Pas meme la place pour l'octet de compte : aucun instrument, flux
+         * vide. a2m_p = a2m_end fait s'arreter t_events() proprement des le
+         * premier appel (cf. sa garde de boucle), sans lire un seul octet de
+         * plus. */
+        n_instr = 0;
+        a2m_p = a2m_end;
+        loop_pos = a2m_end;
+        for (k = 0; k < 6; ++k) {
+            v_instr[k] = 0; v_phase[k] = PH_OFF; v_amp[k] = 0;
+            v_out[k] = 0xFF; v_note[k] = 0; v_arp[k] = 0; v_mix[k] = 0;
+        }
+        pend0 = pend1 = 0;
+        return;
+    }
 
     n_instr = *p++;
     if (n_instr > MAX_INSTR)
         n_instr = MAX_INSTR;
     for (i = 0; i < n_instr; ++i) {
+        /* Un instrument fait 8 octets EN BLOC : soit ils sont tous la, soit
+         * on s'arrete a celui d'avant plutot que d'en lire une moitie. */
+        if (p + 8 > a2m_end) {
+            n_instr = i;
+            break;
+        }
         in_peak[i] = *p++;
         in_atk[i]  = *p++;
         in_dec[i]  = *p++;
@@ -133,12 +159,13 @@ static void t_init(const u8 *mod)
     /* Le corps ne commence qu'APRES la table : c'est elle qui fixe le point
      * de depart du flux, pas l'en-tete. */
     a2m_p = p;
-    /* Point de rebouclage, en offset ABSOLU. Garde-fou : s'il tombe avant le
-     * debut du flux (module produit par un ancien encodeur, ou en-tete
-     * abimee), on reboucle au debut plutot que d'aller lire l'en-tete comme
-     * si c'etaient des evenements. */
+    /* Point de rebouclage, en offset ABSOLU. Garde-fou DOUBLE : s'il tombe
+     * avant le debut du flux (module produit par un ancien encodeur, ou
+     * en-tete abimee) OU au-dela de ce qui a ete charge (offset corrompu), on
+     * reboucle au debut du corps plutot que d'aller lire l'en-tete -- ou la
+     * memoire au-dela du module -- comme si c'etaient des evenements. */
     loop_pos = mod + a2m_rd16(mod + H_LOOPFR);
-    if (loop_pos < p)
+    if (loop_pos < p || loop_pos >= a2m_end)
         loop_pos = p;
     wait_left = 0;
     for (k = 0; k < 6; ++k) {
@@ -226,6 +253,12 @@ static void t_events(void)
     const u8 *p = a2m_p;
 
     for (;;) {
+        /* Garde de boucle : placee ICI, au sommet, elle couvre les TROIS
+         * facons d'entrer dans un nouveau tour -- l'avancee normale, un
+         * EV_LOOP, et le rebouclage sur EV_END -- sans avoir a la repeter
+         * apres chacun. Un flux corrompu qui n'atteint jamais de WAIT ni de
+         * END s'arrete donc au prochain octet manquant, jamais plus loin. */
+        if (p >= a2m_end) { a2m_p = p; a2m_stop(); return; }
         e = *p++;
 
         /* Les valeurs >= 0x80 sont les commandes de flux, et l'attente est de
@@ -254,9 +287,26 @@ static void t_events(void)
         v = (u8)(e & 7);
         if (v > 5)
             continue;                    /* evenement inconnu : on l'ignore */
-        if (e < EV_NOTE_OFF)             { t_note_on(v, *p); ++p; }
+        /* NOTE-ON et INSTR consomment un DEUXIEME octet -- la garde du sommet
+         * de boucle n'a valide que le premier (`e`). Un flux tronque pile
+         * apres l'opcode, sans son operande, s'arrete ici plutot que de lire
+         * l'octet qui suit le module. */
+        if (e < EV_NOTE_OFF) {
+            if (p >= a2m_end) { a2m_p = p; a2m_stop(); return; }
+            t_note_on(v, *p); ++p;
+        }
         else if (e < EV_INSTR)           v_phase[v] = PH_RELEASE;
-        else                             { v_instr[v] = *p; ++p; }
+        else {
+            if (p >= a2m_end) { a2m_p = p; a2m_stop(); return; }
+            /* Replie sur l'instrument 0 si le numero depasse ce que CE
+             * module a declare : t_note_on() et t_envelopes() indexent
+             * in_peak[]/in_atk[]/... (8 cases) avec v_instr[v] SANS le
+             * revalider a chaque trame -- c'est ici, a la SEULE ecriture,
+             * qu'il faut ecarter un octet fantaisiste, pas la-bas cinquante
+             * fois par seconde. */
+            v_instr[v] = (u8)(*p < n_instr ? *p : 0);
+            ++p;
+        }
     }
 }
 
@@ -413,9 +463,9 @@ static void t_frame(void)
 /* Aiguillage : l'appelant ne sait pas quel profil il joue, et n'a pas a le
  * savoir. C'est l'octet 4 de l'en-tete qui decide. */
 
-void __fastcall__ a2m_play_t(const u8 *mod, u8 loop)
+void __fastcall__ a2m_play_t(const u8 *mod, u16 len, u8 loop)
 {
-    if (!a2m_begin(mod, loop))
+    if (!a2m_begin(mod, len, loop))
         return;
     t_init(mod);
     a2m_engine = t_frame;

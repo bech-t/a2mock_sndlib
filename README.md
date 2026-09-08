@@ -17,7 +17,7 @@ audio. Elle vise un Apple II d'époque : **6502 strict**, 64 Ko, ProDOS.
 **Utilisable, et éprouvé sur du vrai matériel.** La bibliothèque et son lecteur
 tournent, et tout ce qui est décrit ici a été vérifié sur une **Mockingboard
 physique** dans un Apple //e — pas seulement sous émulateur. La disquette de
-démonstration joue dix morceaux, dont six à six voies sur les deux puces, et
+démonstration joue onze morceaux, dont six à six voies sur les deux puces, et
 un écran dédié pour comparer les quinze instruments du catalogue à l'oreille.
 
 Ce qu'il faut savoir avant de s'en servir :
@@ -100,8 +100,8 @@ La licence couvre le code, les outils et la documentation.
 
 Les morceaux de la disquette de démonstration sont des **œuvres du domaine
 public** (Bach, Grieg, Joplin, Offenbach, Saint-Saëns, Rimski-Korsakov,
-Beethoven, Petzold). Six d'entre eux sont transcrits à partir de séquences MIDI
-dont les auteurs sont crédités nommément dans
+Beethoven, Petzold, Debussy). Sept d'entre eux sont transcrits à partir de
+séquences MIDI dont les auteurs sont crédités nommément dans
 [`demo/midi/SOURCES.md`](demo/midi/SOURCES.md) ; les fichiers MIDI eux-mêmes ne
 sont pas redistribués. Les quatre autres sont écrits directement en
 [partition texte](docs/partitions.md) dans [`demo/scores/`](demo/scores).

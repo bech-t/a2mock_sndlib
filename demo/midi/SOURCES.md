@@ -39,6 +39,7 @@ curl -L -o mountainking.mid https://www.classicalmidi.co.uk/music2/2320tmmntkng.
 curl -L -o fossiles.mid     https://www.classicalmidi.co.uk/12foss.mid
 curl -L -o bumblebee.mid    https://www.classicalmidi.co.uk/music1/1669bee3.mid
 curl -L -o cancan.mid       "https://www.classicalmidi.co.uk/music3/celrbratedgalopstevenritchie.mid"
+curl -L -o arabesque1.mid   https://www.mutopiaproject.org/ftp/DebussyC/L66/debussy_Arabesque_1/debussy_Arabesque_1.mid
 cd ../ym
 curl -L -o androids.ym      https://raw.githubusercontent.com/simondotm/ym2149f/master/example/Androids.ym
 ```
@@ -55,6 +56,7 @@ curl -L -o androids.ym      https://raw.githubusercontent.com/simondotm/ym2149f/
 | `bumblebee.mid` | Rimski-Korsakov, *Le Vol du bourdon* (1900) | Carl Bertram |
 | `sugarplum.mid` | Tchaïkovski, *Danse de la Fée Dragée* (1892) | mfiles.co.uk |
 | `arabian.mid` | Tchaïkovski, *Café / Danse arabe* (1892) | Scott P. Anderson |
+| `arabesque1.mid` | Debussy, *Première Arabesque*, L. 66 (1888-91) | Mutopia Project — typographié depuis la partition, **domaine public déclaré** (contrairement aux autres lignes : ici même le séquençage l'est) |
 
 ## Le YM
 

@@ -226,17 +226,26 @@ offset 79     ← point de rebouclage
 
 ---
 
-## Ce que le lecteur ne vérifie pas
+## Ce que le lecteur vérifie, et ce qu'il ne vérifie pas
 
-`a2m_check()` valide la magie et le profil, rien d'autre. **Un module tronqué
-ou corrompu fait parcourir au lecteur de la mémoire quelconque** — le bug du
-point de rebouclage l'a démontré, en lui faisant interpréter la chaîne
-d'auteur comme des événements.
+`a2m_check(mod, len)` valide la magie, le profil, et que le début du corps
+tombe dans `len` — le nombre d'octets **réellement chargés**, pas une taille
+lue dans le fichier lui-même (un secteur illisible ou une copie interrompue
+rendent moins d'octets que prévu, et ce n'est pas au fichier de trancher s'il
+ment). `a2m_play_t()`, `a2m_play_r()` et `a2m_play()` reprennent ce même
+`len` : chaque lecture du flux, dans les deux moteurs, vérifie qu'elle reste
+dans cette limite avant de consommer un octet de plus. Un module tronqué ou
+corrompu arrête donc proprement la lecture (silence) au lieu de continuer
+dans la mémoire qui suit le tampon — c'était le bug du point de rebouclage,
+qui faisait interpréter la chaîne d'auteur comme des événements avant que
+cette protection n'existe.
 
-C'est le principal manque du format tel qu'il est implémenté. Un contrôle de
-bornes sur le flux — la fin du module dans l'en-tête, vérifiée à chaque
-trame — coûterait une dizaine de cycles et transformerait « fichier corrompu =
-plantage » en « fichier corrompu = silence ».
+Ce que ça ne fait PAS : valider que le contenu du flux a un SENS au-delà de
+ses bornes. Un octet corrompu mais dans les clous continue d'être joué tel
+quel — une fausse note, un instrument inattendu, pas un plantage. Et la
+protection entière dépend d'un `len` exact : lui passer la taille du tampon
+(`A2M_BUFSZ`) au lieu des octets vraiment lus l'annule silencieusement,
+puisque le lecteur croirait alors le tampon plein.
 
 ---
 

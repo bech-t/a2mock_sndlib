@@ -304,7 +304,8 @@ static const char *const tunes[] = {
     "CANCAN.A2M", "FOSSILE.A2M", "BOURDON.A2M",
     "ELISE.A2M", "MENUET.A2M", "JOIE.A2M",  /* 3 voix, 1 AY : l'AY #2 reste
                                              * libre pour les bruitages */
-    "RYTHME.A2M"                            /* arpeges + percussion */
+    "RYTHME.A2M",                           /* arpeges + percussion */
+    "ARABESQUE.A2M"                         /* 3 voix, 1 AY : premier jet, jamais ecoute */
 };
 #define N_TUNES (sizeof(tunes) / sizeof(tunes[0]))
 
@@ -353,7 +354,7 @@ static u8 load_tune(const char *name)
     if (n < 48)                     /* meme pas un en-tete */
         return 0;
     tune_size = (u16)n;
-    return a2m_check(A2M_BUF);
+    return a2m_check(A2M_BUF, tune_size);
 }
 
 /* Affiche un champ de 16 caracteres non termine par zero (cf. a2m.h). */
@@ -498,7 +499,7 @@ static void module_screen(const char *heading, const char *const *list, u8 n)
             mbt_hook(hook_musique_et_fx);
             if (!mbt_start(a2m_latch(A2M_BUF), MBT_IRQ))
                 mbt_start(a2m_latch(A2M_BUF), MBT_POLL);
-            a2m_play(A2M_BUF, 1);
+            a2m_play(A2M_BUF, tune_size, 1);
             redraw = 1;
         } else if (k == 'p' || k == 'P') {
             a2m_pause((u8)(a2m_state() != A2M_PAUSED));

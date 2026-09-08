@@ -37,6 +37,11 @@ static void tick(void)
     mb_fx_tick();
 }
 
+/* Octets REELLEMENT lus : c'est elle, et pas A2M_BUFSZ, qui borne la lecture
+ * du module -- cf. a2m.h. Un module tronque a moins de 48 octets ne serait
+ * meme pas un en-tete complet, donc jamais valide. */
+static u16 tune_len;
+
 static u8 charger(const char *nom)
 {
     FILE  *f;
@@ -47,7 +52,8 @@ static u8 charger(const char *nom)
         return 0;
     n = fread(A2M_BUF, 1, A2M_BUFSZ, f);   /* $0800, 14 Ko */
     fclose(f);
-    return (u8)(n >= 48 && a2m_check(A2M_BUF));
+    tune_len = (u16)n;
+    return (u8)(n >= 48 && a2m_check(A2M_BUF, tune_len));
 }
 
 int main(void)
@@ -89,7 +95,7 @@ int main(void)
      * profil et appellerait le bon moteur, mais elle NOMME les deux, donc le
      * lieur embarquerait aussi le decodeur du profil R : 2 145 octets pour
      * rien. On paie ce qu'on nomme. */
-    a2m_play_t(A2M_BUF, 1);          /* 1 = en boucle */
+    a2m_play_t(A2M_BUF, tune_len, 1);   /* 1 = en boucle */
 
     cprintf("en lecture.\r\n\n");
     cprintf("  ESPACE  un bruitage par-dessus\r\n");

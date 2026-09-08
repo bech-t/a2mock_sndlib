@@ -82,16 +82,18 @@ exploitation si la machine tient la cadence.
 static void tick(void) { a2m_frame(); }   /* ce que le tick appelle */
 
 ...
+    size_t n;
+
     if (!mb_init(4))                      /* slot DONNÉ, jamais deviné */
         return 1;
 
-    fread(A2M_BUF, 1, A2M_BUFSZ, f);      /* charger le module */
-    if (!a2m_check(A2M_BUF))
+    n = fread(A2M_BUF, 1, A2M_BUFSZ, f);  /* charger le module */
+    if (!a2m_check(A2M_BUF, (u16)n))      /* `n` = octets VRAIMENT lus */
         return 1;
 
     mbt_hook(tick);
     mbt_start(a2m_latch(A2M_BUF), MBT_IRQ);   /* cadence du MODULE */
-    a2m_play_t(A2M_BUF, 1);                   /* 1 = en boucle */
+    a2m_play_t(A2M_BUF, (u16)n, 1);           /* meme n ; 1 = en boucle */
 
     /* ... votre programme. La musique avance toute seule. ... */
 
@@ -220,7 +222,7 @@ Le troisième cas mérite d'être connu : rien n'oblige à charger un fichier.
 static const u8 jingle[] = {
     0x41,0x32,0x4D,0x03, 'T', 0x01, /* ... */
 };
-a2m_play_t(jingle, 0);
+a2m_play_t(jingle, sizeof(jingle), 0);
 ```
 
 Un jingle de quelques centaines d'octets se lie directement — pas de fichier

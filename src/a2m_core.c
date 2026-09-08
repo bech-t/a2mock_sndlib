@@ -10,6 +10,7 @@
 
 const u8 *a2m_p;
 const u8 *a2m_data0;
+const u8 *a2m_end;      /* un octet APRES le dernier valide -- cf. a2m_int.h */
 u8  a2m_st;
 u8  a2m_loop;
 u8  a2m_nay;
@@ -19,11 +20,24 @@ void (*a2m_engine)(void);
 
 u16 a2m_rd16(const u8 *p) { return (u16)(p[0] | ((u16)p[1] << 8)); }
 
-u8 __fastcall__ a2m_check(const u8 *mod)
+/* `len` est le nombre d'octets REELLEMENT en memoire a partir de `mod` -- pas
+ * une taille annoncee par le fichier lui-meme, qu'on ne peut pas croire sur
+ * parole. Un disque qui rend moins d'octets qu'attendu (secteur illisible,
+ * copie interrompue) ne doit pas se voir confier un module que le lecteur
+ * croira plus long qu'il ne l'est : c'est `len` qui tranche, pas l'en-tete. */
+u8 __fastcall__ a2m_check(const u8 *mod, u16 len)
 {
+    if (len < 48)
+        return 0;
     if (mod[0] != 'A' || mod[1] != '2' || mod[2] != 'M' || mod[3] != 0x03)
         return 0;
-    return (u8)(mod[H_PROFILE] == PROFILE_R || mod[H_PROFILE] == PROFILE_T);
+    if (mod[H_PROFILE] != PROFILE_R && mod[H_PROFILE] != PROFILE_T)
+        return 0;
+    /* Le corps doit commencer DANS ce qui a ete charge. Ca n'empeche pas une
+     * troncature plus loin dans le corps -- c'est aux deux moteurs de s'en
+     * proteger, trame par trame, car eux seuls connaissent la structure du
+     * flux (cf. a2m_end dans a2m_r.c / a2m_t.c). */
+    return (u8)(a2m_rd16(mod + H_DATAOFF) <= len);
 }
 
 const char *__fastcall__ a2m_title(const u8 *mod)  { return (const char *)(mod + H_TITLE); }
@@ -46,12 +60,13 @@ void a2m_rewind_chips(void)
 }
 
 /* Amorce commune aux deux moteurs. */
-u8 a2m_begin(const u8 *mod, u8 loop)
+u8 a2m_begin(const u8 *mod, u16 len, u8 loop)
 {
-    if (!mb_slot || !a2m_check(mod)) {
+    if (!mb_slot || !a2m_check(mod, len)) {
         a2m_st = A2M_STOPPED;
         return 0;
     }
+    a2m_end   = mod + len;
     a2m_data0 = mod + a2m_rd16(mod + H_DATAOFF);
     a2m_p     = a2m_data0;
     a2m_no    = 0;

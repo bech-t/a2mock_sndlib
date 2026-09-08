@@ -10,10 +10,10 @@
 
 #include "a2m_int.h"
 
-void __fastcall__ a2m_play(const u8 *mod, u8 loop)
+void __fastcall__ a2m_play(const u8 *mod, u16 len, u8 loop)
 {
     if (mod[H_PROFILE] == PROFILE_T)
-        a2m_play_t(mod, loop);
+        a2m_play_t(mod, len, loop);
     else
-        a2m_play_r(mod, loop);
+        a2m_play_r(mod, len, loop);
 }
