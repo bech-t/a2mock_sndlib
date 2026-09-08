@@ -263,17 +263,22 @@ demo/music/BOURDON.A2M: demo/midi/bumblebee.mid $(MIDI2A2M) tools/a2mconv/midi.p
 	  --ay1 "1:pluck:10,2:pluck:7,14:pluck:6" \
 	  --ay2 "7:soft:8,4:soft:6,5+9+11:soft:5"
 
-# Arabesque : DEUX pistes seulement (main droite/gauche, cf. demo/midi/
-# SOURCES.md), pas un orchestre a grouper -- --voices convient mieux
-# qu'--ay1/--ay2 ici. Trois rangs par main : la plus haute note de chaque
-# main sur une voie a elle, les deux suivantes en soutien, en amplitude
-# decroissante (gain -1/-2). Une premiere version a 3 voix (1 seule main a
-# la fois) manquait de place pour le tissu d'arpege -- 6 voix laissent les
-# deux mains sonner ensemble, comme au piano.
+# Arabesque : DEUX pistes (main droite/gauche, cf. demo/midi/SOURCES.md).
+# --ay1/--ay2 (allocation DYNAMIQUE) plutot que --voices (rang fixe) : la
+# polyphonie reelle est modeste (3 notes max a droite, 4 a gauche -- mesure),
+# donc le vrai gain n'est pas le nombre de notes captees mais la CONTINUITE
+# de voix. --voices assigne un rang fixe par voie ; quand une note change de
+# rang parce qu'une voisine apparait ou disparait, elle change de voix AY
+# d'une trame a l'autre -- l'attaque redemarre au lieu de continuer, ce qui
+# s'entend comme un decrochage. allocate() garde expres la meme voix a une
+# note deja en cours (cf. son commentaire "continuite"). Une main par puce :
+# ca reste un placement STEREO, la main droite d'un cote, la gauche de
+# l'autre, comme le veut la conception du convertisseur.
 demo/music/ARABESQUE.A2M: demo/midi/arabesque1.mid $(MIDI2A2M) tools/a2mconv/midi.py tools/a2mconv/a2m.py
 	@mkdir -p demo/music
 	@python3 $(MIDI2A2M) $< -o $@ --profile T --title "ARABESQUE 1" --author DEBUSSY --seconds 177 \
-	  --voices "1:0:pluck:0:0,1:1:pluck:0:-1,1:2:pluck:0:-2,2:0:bass:0:0,2:1:pluck:0:-1,2:2:pluck:0:-2"
+	  --ay1 "1:pluck:5" \
+	  --ay2 "2:bass:5"
 
 MIDITUNES := demo/music/BACH.A2M demo/music/GRIEG.A2M demo/music/JOPLIN.A2M \
              demo/music/CANCAN.A2M demo/music/FOSSILE.A2M demo/music/BOURDON.A2M \

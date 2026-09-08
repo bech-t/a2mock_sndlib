@@ -176,16 +176,21 @@ def group_notes(m, g, conv, max_frames, skip_frames):
     return out
 
 
-def allocate(notes, total, transpose=0):
-    """Choisit, trame par trame, les TROIS notes que joue cet AY.
-    -> voix[3][trame] = (hauteur, instrument, debut) ou None.
+def allocate(notes, total, transpose=0, n=3):
+    """Choisit, trame par trame, les `n` notes que jouent CES voies.
+    -> voix[n][trame] = (hauteur, instrument, debut) ou None.
+
+    `n` vaut 3 (une puce) partout sauf pour le mixage des deux mains d'un
+    piano sur les 6 voies a la fois -- cf. build_auto(merge=True). Le corps
+    de la fonction ne connait pas la difference : "la plus haute et la plus
+    basse d'abord, le reste au poids" marche pareil sur 3 ou 6 voies.
 
     `debut` est l'IDENTITE de la note, et il est indispensable : sans lui, deux
     croches de meme hauteur qui se suivent sont indiscernables, on n'emet
     qu'une seule attaque, et la seconde est MUETTE -- l'enveloppe ayant deja
     fini de decliner. Le celesta de la Fee Dragee ne fait pratiquement que ca.
     Comparer les hauteurs ne suffit donc pas : il faut comparer les notes."""
-    voix = [[None] * total for _ in range(3)]
+    voix = [[None] * total for _ in range(n)]
     for f in range(total):
         sounding = {}
         for f0, f1, p, w, ins in notes:
@@ -202,10 +207,10 @@ def allocate(notes, total, transpose=0):
             chosen.append(pitches[0])
         rest = sorted((p for p in pitches if p not in chosen),
                       key=lambda p: (-sounding[p][0], -p))
-        chosen += rest[:3 - len(chosen)]
+        chosen += rest[:n - len(chosen)]
 
         # continuite : une note deja en cours garde sa voie
-        free = [v for v in range(3)]
+        free = [v for v in range(n)]
         placed = {}
         for p in chosen:
             for v in list(free):
@@ -289,8 +294,19 @@ def build_events(m, voices, hz, max_frames, skip_frames=0):
     return events, used, total
 
 
-def build_auto(m, g1, g2, hz, max_frames, skip_frames, tr1, tr2):
-    """Allocation dynamique sur les deux AY -> evenements du profil T."""
+def build_auto(m, g1, g2, hz, max_frames, skip_frames, tr1, tr2, merge=False):
+    """Allocation dynamique sur les deux AY -> evenements du profil T.
+
+    `merge` : au lieu de deux bassins INDEPENDANTS de 3 voix (g1 sur l'AY #1,
+    g2 sur l'AY #2 -- un placement STEREO, chaque groupe plafonne a 3 notes
+    meme si l'autre groupe est silencieux au meme instant), un seul bassin de
+    6 voix ou n'importe quelle note de n'importe quel groupe peut en prendre
+    une. Utile pour un piano a deux mains, dont la polyphonie totale depasse
+    ce qu'une main plafonnee a 3 laisse passer -- au prix de la separation
+    stereo main gauche/droite, qui disparait : une note peut atterrir sur
+    n'importe laquelle des 6 voies selon ce qui est libre au moment ou elle
+    commence. Le transpose de chaque groupe est applique AVANT la fusion, ici,
+    puisqu'allocate() n'en accepte plus qu'un seul pour l'appel fusionne."""
     conv = tick_to_frame(m, hz)
     n1 = group_notes(m, g1, conv, max_frames, skip_frames)
     n2 = group_notes(m, g2, conv, max_frames, skip_frames)
@@ -300,9 +316,14 @@ def build_auto(m, g1, g2, hz, max_frames, skip_frames, tr1, tr2):
             total = max(total, max(f1 for _, f1, _, _, _ in lst))
     total = min(total, max_frames)
 
-    v1 = allocate(n1, total, tr1)
-    v2 = allocate(n2, total, tr2)
-    seq = v1 + v2
+    if merge:
+        n1 = [(f0, f1, p + tr1, w, ins) for f0, f1, p, w, ins in n1]
+        n2 = [(f0, f1, p + tr2, w, ins) for f0, f1, p, w, ins in n2]
+        seq = allocate(n1 + n2, total, 0, n=6)
+    else:
+        v1 = allocate(n1, total, tr1)
+        v2 = allocate(n2, total, tr2)
+        seq = v1 + v2
 
     instrs = []
     for g in (g1, g2):
@@ -352,6 +373,9 @@ def main():
     ap.add_argument("--ay2", help="groupe de l'AY #2")
     ap.add_argument("--transpose1", type=int, default=0)
     ap.add_argument("--transpose2", type=int, default=0)
+    ap.add_argument("--merge", action="store_true",
+                    help="fusionne ay1+ay2 en UN bassin de 6 voix (perd le placement stereo, "
+                         "gagne en notes captees si une main sature pendant que l'autre est calme)")
     ap.add_argument("--voices", required=False,
                     help="six specifications 'pistes:rang:env:transpo:gain' separees par des virgules")
     args = ap.parse_args()
@@ -362,7 +386,7 @@ def main():
     if args.ay1 and args.ay2:
         events, instrs, nframes = build_auto(
             m, Group(args.ay1), Group(args.ay2), args.hz, maxf, skipf,
-            args.transpose1, args.transpose2)
+            args.transpose1, args.transpose2, merge=args.merge)
         blob = a2m.encode_t(events, instrs, title=args.title, author=args.author,
                             hz=args.hz, looping=True, n_ay=2, n_frames=nframes)
         open(args.output, "wb").write(blob)
