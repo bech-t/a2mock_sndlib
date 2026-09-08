@@ -1,0 +1,53 @@
+# Artefacts de build (cc65). On ignore le CONTENU de build/ et pas le dossier
+# lui-meme : c'est ce qui permet d'en excepter l'image disque plus bas (git ne
+# sait pas desexclure un fichier situe dans un dossier exclu).
+build/*
+examples/skeleton/build/
+*.o
+*.d
+*.map
+*.lib
+
+*.jar
+
+# `test/` n'est PAS ici : la suite de verifications hote est du contenu, pas un
+# artefact. Elle est le seul garde-fou automatise du depot.
+emu/
+history/
+
+# Images disque produites
+*.dsk
+*.DSK
+*.po
+*.2mg
+
+# ... a une exception pres : la derniere disquette de demonstration est
+# versionnee, pour qu'elle soit telechargeable depuis le depot sans avoir a
+# installer cc65. Cette ligne vient APRES *.dsk : c'est la derniere regle qui
+# correspond qui gagne. `make clean` l'epargne (cf. Makefile).
+!build/a2mb-test.dsk
+
+# Modules convertis : TOUJOURS regeneres par `make music` depuis demo/music/*.pt3
+demo/music/*.A2M
+demo/music/*.a2m
+
+# Outils Python
+__pycache__/
+*.pyc
+.venv/
+
+# Materiel de reference tiers
+*.pdf
+demo/midi/*.mid
+demo/ym/*.ym
+
+# Extraits audio captes depuis l'emulateur : gros et regenerables.
+ecoute/
+
+# Metadonnees Windows (flux "provenance" ajoute par l'Explorateur sous WSL)
+*Zone.Identifier*
+
+# Specification technique interne : document de travail, non distribue.
+# Reste en local ; la doc publique du format A2M vit dans docs/.
+spec.md
+

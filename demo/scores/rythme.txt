@@ -1,0 +1,36 @@
+# DEMO RYTHME -- montre ce que l'AY sait faire au-dela du ton simple.
+#
+#   voix A : arpeges. Un accord sur UNE voie -- la voie alterne la fondamentale,
+#            la tierce et la quinte a chaque trame. C'est l'astuce chiptune
+#            classique : trois voix deviennent trois accords.
+#   voix B : basse pincee, simple, pour l'assise.
+#   voix C : PERCUSSION au bruit. La hauteur ecrite ne choisit pas une note
+#            mais le grain : grave = sourd (grosse caisse), aigu = claquant
+#            (caisse claire, charleston).
+#
+# Trois voix, un seul AY : l'AY #2 reste libre pour les bruitages du jeu.
+title: DEMO RYTHME
+author: A2MOCK
+tempo: 120
+hz: 50
+loop: yes
+
+voice A: minor
+voice B: bass
+voice C: drum
+# --- 4 mesures en la mineur, puis 4 en fa, sol, la ----------------------
+A: a3/4 a3/4 a3/4 a3/4
+A: a3/4 a3/4 a3/4 a3/4
+A: f3/4 f3/4 g3/4 g3/4
+A: a3/4 a3/4 a3/4 a3/4
+
+B: a1/8 r/8 a1/8 r/8 e2/8 r/8 a1/8 r/8
+B: a1/8 r/8 a1/8 r/8 e2/8 r/8 a1/8 r/8
+B: f1/8 r/8 f1/8 r/8 g1/8 r/8 g1/8 r/8
+B: a1/8 r/8 e2/8 r/8 a1/8 r/8 e2/8 r/8
+
+# c1 = sourd (grosse), a3 = claquant (caisse), c4 = tres clair (charleston)
+C: c1/8 c4/8 a3/8 c4/8 c1/8 c4/8 a3/8 c4/8
+C: c1/8 c4/8 a3/8 c4/8 c1/8 c1/8 a3/8 c4/8
+C: c1/8 c4/8 a3/8 c4/8 c1/8 c4/8 a3/8 c4/8
+C: c1/8 c4/8 a3/8 a3/8 c1/8 a3/8 a3/8 a3/8

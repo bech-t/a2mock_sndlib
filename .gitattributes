@@ -1,0 +1,8 @@
+# L'image disque est versionnée : la marquer explicitement binaire évite
+# qu'un clone sous Windows (core.autocrlf) ne « corrige » ses fins de ligne
+# et ne la rende inamorçable. Git le déduirait des octets nuls, mais sur le
+# seul artefact que les gens téléchargent, autant ne rien laisser au hasard.
+*.dsk  binary
+*.po   binary
+*.2mg  binary
+*.A2M  binary

@@ -1,0 +1,36 @@
+# Bagatelle en la mineur WoO 59, « Fur Elise » -- Beethoven (domaine public)
+title: FUR ELISE
+author: BEETHOVEN
+tempo: 76
+hz: 50
+loop: yes
+
+voice A: pluck
+voice B: pluck
+voice C: bass
+A: e5/16 d#5/16 e5/16 d#5/16 e5/16 b4/16 d5/16 c5/16
+A: a4/8 r/16 c4/16 e4/16 a4/16
+A: b4/8 r/16 e4/16 g#4/16 b4/16
+A: c5/8 r/16 e4/16 e5/16 d#5/16
+A: e5/16 d#5/16 e5/16 d#5/16 e5/16 b4/16 d5/16 c5/16
+A: a4/8 r/16 c4/16 e4/16 a4/16
+A: b4/8 r/16 e4/16 c5/16 b4/16
+A: a4/4 r/8
+
+B: r/2
+B: r/2
+B: r/2
+B: r/2
+B: r/2
+B: r/2
+B: r/2
+B: r/2
+
+C: r/2
+C: a2/8 e3/8 a3/8 r/8
+C: e2/8 e3/8 g#3/8 r/8
+C: a2/8 e3/8 a3/8 r/8
+C: r/2
+C: a2/8 e3/8 a3/8 r/8
+C: e2/8 e3/8 g#3/8 r/8
+C: a2/4 r/8

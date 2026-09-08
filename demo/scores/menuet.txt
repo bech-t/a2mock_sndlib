@@ -1,0 +1,37 @@
+# Menuet en sol majeur BWV Anh. 114 (Petit livre d'Anna Magdalena Bach)
+# Attribue a Christian Petzold. Domaine public.
+title: MENUET EN SOL
+author: PETZOLD
+tempo: 132
+hz: 50
+loop: yes
+
+voice A: pluck
+voice B: pluck
+voice C: bass
+A: d5/4 g4/8 a4/8 b4/8 c5/8
+A: d5/4 g4/4 g4/4
+A: e5/4 c5/8 d5/8 e5/8 f#5/8
+A: g5/4 g4/4 g4/4
+A: c5/4 d5/8 c5/8 b4/8 a4/8
+A: b4/4 c5/8 b4/8 a4/8 g4/8
+A: f#4/4 g4/8 a4/8 b4/8 g4/8
+A: a4/2.
+
+B: r/2.
+B: b4/4 d4/4 d4/4
+B: r/2.
+B: b4/4 b4/4 b4/4
+B: r/2.
+B: g4/4 g4/4 f#4/4
+B: r/2.
+B: d4/2.
+
+C: g2/2.
+C: g2/4 b2/4 g2/4
+C: c3/2.
+C: g2/4 b2/4 g2/4
+C: a2/2.
+C: g2/4 g2/4 d3/4
+C: d3/2.
+C: d3/4 d2/4 g2/4

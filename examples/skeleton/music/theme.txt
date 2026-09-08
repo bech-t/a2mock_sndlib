@@ -1,0 +1,18 @@
+# Partition d'exemple. Voir docs/partitions.md pour la syntaxe.
+#
+# Trois voix, donc UN seul AY : l'AY #2 reste libre pour les bruitages.
+title: THEME
+author: EXEMPLE
+tempo: 120
+hz: 50
+loop: yes
+
+voice A: major        # arpege : un accord sur une seule voie
+voice B: pluck
+voice C: bass
+
+A: c4/2 f4/2 g4/2 c4/2
+B: e5/4 r/4 c5/4 r/4   a4/4 r/4 b4/4 r/4
+B: b4/4 r/4 d5/4 r/4   e5/4 r/4 c5/4 r/4
+C: c2/4 g2/4 c2/4 g2/4   f2/4 c3/4 f2/4 c3/4
+C: g2/4 d3/4 g2/4 d3/4   c2/4 g2/4 c2/4 g2/4
