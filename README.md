@@ -54,12 +54,10 @@ git clone <ce-depot>          # elle est dedans, rien a compiler
 ```
 
 Elle se lance telle quelle sous **MAME**, **AppleWin** ou **Virtual ][**, et
-s'écrit sur une vraie disquette avec ADTPro pour un Apple II d'époque. Il faut
+s'écrit sur une vraie disquette avec ADTPro par exemple pour un Apple II d'époque. Il faut
 une Mockingboard : le programme demande le slot au démarrage, il n'y a **pas de
 détection automatique** — sonder à l'aveugle un slot inconnu revient à écrire
 dans les phases du moteur d'un contrôleur Disk II.
-
-Le reste de `build/` n'est pas versionné, et `make clean` épargne l'image.
 
 ## Construire
 
