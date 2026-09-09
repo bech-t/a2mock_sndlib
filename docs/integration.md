@@ -280,5 +280,5 @@ python3 tools/a2mconv/a2mconv.py ma_partition.txt -o THEME.A2M
 ```
 
 Voir [Écrire de la musique en texte](partitions.md) — quelques centaines
-d'octets pour un morceau entier, et ça s'édite. Les convertisseurs MIDI et YM
-sont décrits dans [Le format A2M](format-a2m.md).
+d'octets pour un morceau entier, et ça s'édite. Les convertisseurs MIDI, YM
+et PT3 sont décrits dans [Le format A2M](format-a2m.md).

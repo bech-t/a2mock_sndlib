@@ -256,6 +256,7 @@ puisque le lecteur croirait alors le tampon plein.
 | partition texte | `a2mconv.py` | T (R avec `--profile R`) |
 | MIDI | `midi2a2m.py` | T ou R, 3 ou 6 voix |
 | dump YM (Atari, ZX) | `ym2a2m.py` | R obligatoirement |
+| module PT3 (ZX Spectrum) | `pt32a2m.py` | R obligatoirement — **v1 partielle** : notes/volume/ornement seulement, pas encore les effets ni les échantillons, et non vérifiée contre un fichier PT3 réel |
 | par programme | `a2m.encode()` / `encode_t()` | les deux |
 
 Voir [Écrire de la musique en texte](partitions.md) pour le format de

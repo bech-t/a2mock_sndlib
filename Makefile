@@ -40,7 +40,7 @@ ASRC     := $(wildcard $(SRCDIR)/*.s)
 OBJS     := $(patsubst $(SRCDIR)/%.c,$(BUILDDIR)/%.o,$(CSRC)) \
             $(patsubst $(SRCDIR)/%.s,$(BUILDDIR)/%.o,$(ASRC))
 
-.PHONY: all lib demo dsk music scores clean hosttest emu-check
+.PHONY: all lib demo dsk music scores clean hosttest pt3test emu-check
 
 all: lib demo
 
@@ -337,6 +337,12 @@ hosttest: | $(BUILDDIR)
 	gcc -std=c99 -Wall -Wextra -I$(INCDIR) -o $(BUILDDIR)/hosttest \
 	    test/hosttest.c $(CSRC) -lm
 	$(BUILDDIR)/hosttest
+
+# Auto-coherence du renderer PT3 hote (spec.md §5.7) contre des fixtures
+# ecrites a la main -- PAS un test contre un vrai fichier PT3, voir la
+# docstring de test/pt3_test.py.
+pt3test:
+	python3 test/pt3_test.py
 
 # --- Banc d'essai --------------------------------------------------------
 emu-check:
