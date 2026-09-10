@@ -14,6 +14,27 @@
 #include "a2mb_time.h"
 #include "a2mb_fx.h"
 
+u8 g_lang = LANG_FR;
+
+/* Choisi en tout premier, avant meme pick_slot() : aucune langue n'est
+ * encore choisie pour l'afficher, donc ce seul ecran reste bilingue "en
+ * dur", cote a cote -- comme le fait un appareil bilingue reel. */
+static void pick_lang(void)
+{
+    u8 k;
+
+    for (;;) {
+        clrscr();
+        cprintf("LANGUE/LANGUAGE :\r\n\n");
+        cprintf("  1. francais\r\n");
+        cprintf("  2. english\r\n\n");
+        cprintf("choix/choice : ");
+        k = cgetc();
+        if (k == '1') { g_lang = LANG_FR; return; }
+        if (k == '2') { g_lang = LANG_EN; return; }
+    }
+}
+
 /* Choix du slot -- A LA MAIN, et rien d'autre.
  *
  * Aucune detection automatique, aucun balayage, meme sur demande : tant que
@@ -33,16 +54,20 @@ static u8 pick_slot(void)
         cprintf("a2mock_sndlib -- mockingboard\r\n");
         cprintf("=================================\r\n\n");
 
-        cprintf("DANS QUEL SLOT EST LA CARTE ?\r\n\n");
-        cprintf("  touches 1 a 7\r\n\n");
+        cprintf(T("DANS QUEL SLOT EST LA CARTE ?\r\n\n",
+                   "WHICH SLOT IS THE CARD IN?\r\n\n"));
+        cprintf(T("  touches 1 a 7\r\n\n", "  keys 1 to 7\r\n\n"));
 
-        cprintf("aucune recherche automatique : rien\r\n");
-        cprintf("n'est ecrit dans un slot que vous\r\n");
-        cprintf("n'avez pas designe.\r\n\n");
-        cprintf("le slot 4 est la convention historique\r\n");
-        cprintf("de la Mockingboard.\r\n\n");
+        cprintf(T("aucune recherche automatique : rien\r\n",
+                   "no auto-detect : nothing gets\r\n"));
+        cprintf(T("n'est ecrit dans un slot que vous\r\n",
+                   "written to a slot you haven't\r\n"));
+        cprintf(T("n'avez pas designe.\r\n\n", "designated.\r\n\n"));
+        cprintf(T("le slot 4 est la convention historique\r\n",
+                   "slot 4 is the historical convention\r\n"));
+        cprintf(T("de la Mockingboard.\r\n\n", "for the Mockingboard.\r\n\n"));
 
-        cprintf("choix : ");
+        cprintf(T("choix : ", "choice : "));
         k = cgetc();
         if (k < '1' || k > '7')
             continue;
@@ -79,14 +104,18 @@ int main(void)
 {
     u8 slot, k, ready;
 
+    pick_lang();
     slot  = pick_slot();
     ready = mb_init(slot);
 
     if (!ready) {
-        cprintf("\r\nmb_init a echoue sur le slot %u.\r\n", slot);
-        cprintf("l'epreuve 1 reste utilisable : elle ne\r\n");
-        cprintf("pilote rien, elle ne fait que sonder.\r\n");
-        cprintf("\r\n-- une touche --");
+        cprintf(T("\r\nmb_init a echoue sur le slot %u.\r\n",
+                   "\r\nmb_init failed on slot %u.\r\n"), slot);
+        cprintf(T("l'epreuve 1 reste utilisable : elle ne\r\n",
+                   "test 1 remains usable : it drives\r\n"));
+        cprintf(T("pilote rien, elle ne fait que sonder.\r\n",
+                   "nothing, it only probes.\r\n"));
+        cprintf(T("\r\n-- une touche --", "\r\n-- press a key --"));
         cgetc();
     }
 
@@ -94,21 +123,25 @@ int main(void)
         clrscr();
         cprintf("a2mock_sndlib -- mockingboard\r\n");
         cprintf("=================================\r\n\n");
-        if (ready) cprintf("carte : slot %u\r\n\n", slot);
-        else       cprintf("carte : AUCUNE (epreuve 1 seule)\r\n\n");
+        if (ready) cprintf(T("carte : slot %u\r\n\n", "card : slot %u\r\n\n"), slot);
+        else       cprintf(T("carte : AUCUNE (epreuve 1 seule)\r\n\n",
+                              "card : NONE (test 1 only)\r\n\n"));
 
-        cprintf("  1. sonder le slot %u (en detail)\r\n", slot);
-        cprintf("  2. les six voies\r\n");
-        cprintf("  3. la base de temps (IRQ)\r\n");
-        cprintf("  4. les bruitages\r\n");
-        cprintf("  5. MUSIQUE (modules A2M)\r\n");
-        cprintf("  6. TIMBRES (test d'instruments)\r\n");
-        cprintf("\r\n  S. changer de slot\r\n");
-        cprintf("  Q. quitter\r\n");
-        cprintf("\r\nchoix : ");
+        cprintf(T("  1. sonder le slot %u (en detail)\r\n",
+                   "  1. probe slot %u (in detail)\r\n"), slot);
+        cprintf(T("  2. les six voies\r\n", "  2. the six voices\r\n"));
+        cprintf(T("  3. la base de temps (IRQ)\r\n", "  3. the timebase (IRQ)\r\n"));
+        cprintf(T("  4. les bruitages\r\n", "  4. sound effects\r\n"));
+        cprintf(T("  5. MUSIQUE (modules A2M)\r\n", "  5. MUSIC (A2M modules)\r\n"));
+        cprintf(T("  6. TIMBRES (test d'instruments)\r\n",
+                   "  6. TIMBRES (instrument test)\r\n"));
+        cprintf(T("  7. PT3 (musiques Spectrum)\r\n", "  7. PT3 (Spectrum tunes)\r\n"));
+        cprintf(T("\r\n  S. changer de slot\r\n", "\r\n  S. change slot\r\n"));
+        cprintf(T("  Q. quitter (ou Echap)\r\n", "  Q. quit (or Esc)\r\n"));
+        cprintf(T("\r\nchoix : ", "\r\nchoice : "));
 
         k = cgetc();
-        if (k >= '1' && k <= '6')
+        if (k >= '1' && k <= '7')
             contexte_propre();          /* avant : la carte est a nous seule */
 
         switch (k) {
@@ -118,12 +151,13 @@ int main(void)
         case '4': if (ready) t_fx();     break;
         case '5': if (ready) t_music(); break;
         case '6': if (ready) t_instruments(); break;
+        case '7': if (ready) t_pt3(); break;
         case 's': case 'S':
             contexte_propre();
             slot  = pick_slot();
             ready = mb_init(slot);
             break;
-        case 'q': case 'Q':
+        case 'q': case 'Q': case 27:        /* 27 = Echap */
             /* Rendre la machine dans l'etat ou on l'a trouvee : le tick arrete
              * et le vecteur d'interruption rendu. Un handler laisse en place
              * sur un timer qui bat encore plante la machine des que le code a
@@ -137,7 +171,7 @@ int main(void)
         default: break;
         }
 
-        if (k >= '1' && k <= '6') {
+        if (k >= '1' && k <= '7') {
             /* Apres : l'epreuve 1 a SONDE le slot, ce qui reprogramme le timer
              * T1 de la VIA #1 -- c'est ainsi qu'on reconnait un 6522. Sans
              * cette reinitialisation, l'ecran suivant demarre sur une base de

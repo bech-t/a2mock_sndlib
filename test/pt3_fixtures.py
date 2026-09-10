@@ -36,10 +36,17 @@ def envelope(etype, period):
     return bytes([0xB0 | (etype + 1)]) + struct.pack(">H", period)
 def skip(n_lines):
     return bytes([0xB1, n_lines])
-def effect_glissando(delay, add):
-    return bytes([0x01, delay]) + struct.pack("<h", add)
-def effect_set_speed(new_speed):
-    return bytes([0x09, new_speed])
+
+# Effets : l'OPCODE se place dans le prefixe (avant la note), ses
+# PARAMETRES juste apres le declencheur -- confirme contre PT3Play.cs
+# (cf. le commentaire au sommet de _parse_channel_stream dans pt3.py).
+# Composer une ligne a effet : `effect_opcode(0x01) + note(idx) + effect_params_glissando(...)`.
+def effect_opcode(code):
+    return bytes([code])
+def effect_params_glissando(delay, add):
+    return bytes([delay]) + struct.pack("<h", add)     # petit-boutien (AY_Sys_GetWord)
+def effect_params_set_speed(new_speed):
+    return bytes([new_speed])
 
 
 def build(name, author, order, pattern_streams, samples=None, ornaments=None,
@@ -155,9 +162,10 @@ def envelope_trigger():
 
 
 def effect_skipped():
-    """Une note portant un effet (glissando) : l'effet doit etre consomme
-    sans desynchroniser la ligne suivante. Teste la phase 3 du parseur."""
-    a = (volume(15) + note(24) + effect_glissando(1, 100)
+    """Une note portant un effet (glissando) : l'opcode dans le prefixe,
+    ses parametres APRES la note -- l'effet doit etre consomme sans
+    desynchroniser la ligne suivante."""
+    a = (volume(15) + effect_opcode(0x01) + note(24) + effect_params_glissando(1, 100)
          + volume(15) + note(28))
     b = end_row() * 2
     c = end_row() * 2

@@ -52,14 +52,16 @@ def main():
                                     mod["speed"], len(mod["order"])))
         print("   rapport d'horloge applique : %.4f (periodes ton/enveloppe)"
               % (pt3.APPLE_CLOCK / pt3.ZX_CLOCK))
-        if mod["n_effects_ignored"]:
-            print("   /!\\ %d effet(s) rencontre(s) et IGNORES (glissando, "
-                  "portamento, vibrato...) -- consommes sans etre appliques,"
-                  % mod["n_effects_ignored"])
-            print("       cf. pt3.py, etape 3 non faite. Un morceau qui en "
-                  "dépend sonnera juste mais statique.")
-        print("   /!\\ echantillons (enveloppes d'instrument) et bruit : "
-              "NON reproduits en v1 -- cf. docstring de pt3.py.")
+        if mod["n_effects"]:
+            print("   effets rencontres : %d (glissando/portamento/vibrato/"
+                  "offsets/vitesse -- appliques)" % mod["n_effects"])
+        if mod["n_effects_unapplied"]:
+            print("   /!\\ %d glissando(s) d'ENVELOPPE rencontre(s) et IGNORES "
+                  "-- seul effet encore non applique, cf. pt3.py."
+                  % mod["n_effects_unapplied"])
+        print("   /!\\ enveloppe/bruit propres a l'echantillon (bits de "
+              "\"sliding\" accumules) : valeur instantanee seulement, pas "
+              "l'accumulation trame par trame -- cf. docstring de pt3.py.")
 
         # Aller-retour : comme ym2a2m.py, le decodeur doit relire EXACTEMENT
         # ce qu'on a ecrit.
@@ -81,9 +83,14 @@ def main():
                     if "note" in ev:
                         notes_vus.add(ev["note"])
         if notes_vus:
-            pire = max(notes_vus, key=lambda i: abs(pt3.cents_error(i)))
-            print("   justesse : pire ecart %.1f cents (note d'indice %d)"
-                  % (pt3.cents_error(pire), pire))
+            note_table = pt3._note_table(mod["freq_table"], mod["version"])
+            anchor, confiance = pt3.table_anchor(note_table)
+            pire = max(notes_vus,
+                       key=lambda i: abs(pt3.cents_error(i, note_table[i], anchor)))
+            print("   justesse : pire ecart %.1f cents (note d'indice %d)%s"
+                  % (pt3.cents_error(pire, note_table[pire], anchor), pire,
+                     "" if confiance < 5 else
+                     "  /!\\ ancrage incertain pour cette table (§5.7)"))
 
 
 if __name__ == "__main__":

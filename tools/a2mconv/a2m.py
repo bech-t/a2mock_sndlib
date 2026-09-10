@@ -175,11 +175,17 @@ def encode(frames, *, title="", author="", hz=50, loop_frame=0,
         body += v0; body += v1
 
         # -- suivre l'etat des amplitudes ------------------------------------
+        # Ecretage a 31, pas 15 : le registre d'amplitude AY tient sur 5 bits,
+        # le bit 4 signifiant "pilotee par l'enveloppe materielle" (un YM le
+        # transporte deja, cf. ym.py `& 0x1F`). Ecreter a 15 ici desynchronise
+        # silencieusement le suivi d'etat de l'encodeur d'avec le decodeur des
+        # qu'une voie l'utilise -- trouve en convertissant un PT3 reel dont
+        # une voie passe par l'enveloppe (spec.md §5.7).
         if use_delta:
             for k, c in enumerate(codes):
                 if c:
                     ay, ch = divmod(k, 3)
-                    amp[ay][ch] = max(0, min(15, amp[ay][ch] + _CODE_DELTA[c]))
+                    amp[ay][ch] = max(0, min(31, amp[ay][ch] + _CODE_DELTA[c]))
         else:
             for ay, d in ((0, d0), (1, d1)):
                 for r, v in d.items():
@@ -225,7 +231,7 @@ def decode(blob):
                 c = (packed >> (k * 2)) & 3
                 if c:
                     ay, ch = divmod(k, 3)
-                    state[ay][8 + ch] = max(0, min(15,
+                    state[ay][8 + ch] = max(0, min(31,     # cf. encode() : 5 bits, pas 4
                         state[ay][8 + ch] + _CODE_DELTA[c]))
         masks = []
         for flag in (CTRL_MASK1, CTRL_MASK2):

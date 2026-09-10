@@ -40,7 +40,7 @@ static char touche(u8 i)
 
 static void pause(void)
 {
-    cprintf("\r\n-- une touche --");
+    cprintf(T("\r\n-- une touche --", "\r\n-- press a key --"));
     cgetc();
 }
 
@@ -59,18 +59,23 @@ void __fastcall__ t_probe_slot(u8 slot)
     u8 a, b, k;
 
     clrscr();
-    cprintf("1. SONDE DU SLOT %u\r\n\n", slot);
+    cprintf(T("1. SONDE DU SLOT %u\r\n\n", "1. PROBE SLOT %u\r\n\n"), slot);
 
     if (slot == 6) {
-        cprintf("ATTENTION : le slot 6 porte presque\r\n");
-        cprintf("toujours le controleur de disquette.\r\n");
-        cprintf("la sonde y ecrit dans les phases du\r\n");
-        cprintf("moteur pas-a-pas : la tete va bouger,\r\n");
-        cprintf("sur la disquette qui vous fait tourner.\r\n\n");
-        cprintf("continuer ? (O/N) ");
+        cprintf(T("ATTENTION : le slot 6 porte presque\r\n",
+                   "WARNING : slot 6 almost always\r\n"));
+        cprintf(T("toujours le controleur de disquette.\r\n",
+                   "carries the disk controller.\r\n"));
+        cprintf(T("la sonde y ecrit dans les phases du\r\n",
+                   "the probe writes into the stepper\r\n"));
+        cprintf(T("moteur pas-a-pas : la tete va bouger,\r\n",
+                   "motor phases : the head will move,\r\n"));
+        cprintf(T("sur la disquette qui vous fait tourner.\r\n\n",
+                   "on the disk you're running from.\r\n\n"));
+        cprintf(T("continuer ? (O/N) ", "continue? (Y/N) "));
         k = cgetc();                    /* UNE seule lecture : deux cgetc()
                                          * demanderaient deux touches. */
-        if (k != 'o' && k != 'O')
+        if (g_lang == LANG_EN ? (k != 'y' && k != 'Y') : (k != 'o' && k != 'O'))
             return;
         cprintf("\r\n\n");
     }
@@ -78,22 +83,32 @@ void __fastcall__ t_probe_slot(u8 slot)
     a = mb_probe_via(slot, 0);
     b = mb_probe_via(slot, 1);
 
-    cprintf("  6522 en $C%u00 : %s\r\n", slot, a ? "OUI" : "non");
-    cprintf("  6522 en $C%u80 : %s\r\n\n", slot, b ? "OUI" : "non");
+    cprintf(T("  6522 en $C%u00 : %s\r\n", "  6522 at $C%u00 : %s\r\n"),
+            slot, a ? T("OUI", "YES") : T("non", "no"));
+    cprintf(T("  6522 en $C%u80 : %s\r\n\n", "  6522 at $C%u80 : %s\r\n\n"),
+            slot, b ? T("OUI", "YES") : T("non", "no"));
 
     if (a && b)
         cprintf("-> Mockingboard.\r\n");
     else if (a || b)
-        cprintf("-> une carte repond, mais un seul 6522 :\r\n"
-                "   ce n'est pas une Mockingboard.\r\n");
+        cprintf(T("-> une carte repond, mais un seul 6522 :\r\n"
+                   "   ce n'est pas une Mockingboard.\r\n",
+                   "-> a card responds, but only one 6522 :\r\n"
+                   "   this isn't a Mockingboard.\r\n"));
     else
-        cprintf("-> rien ne repond dans ce slot.\r\n");
+        cprintf(T("-> rien ne repond dans ce slot.\r\n",
+                   "-> nothing responds in this slot.\r\n"));
 
-    cprintf("\r\nla sonde exige DEUX epreuves : un\r\n");
-    cprintf("aller-retour sur DDRA ($55 puis $AA),\r\n");
-    cprintf("et un timer T1 qui DESCEND tout seul.\r\n");
-    cprintf("la premiere ecarte le bus flottant, la\r\n");
-    cprintf("seconde ecarte de la simple RAM.\r\n");
+    cprintf(T("\r\nla sonde exige DEUX epreuves : un\r\n",
+               "\r\nthe probe demands TWO tests : a\r\n"));
+    cprintf(T("aller-retour sur DDRA ($55 puis $AA),\r\n",
+               "round-trip on DDRA ($55 then $AA),\r\n"));
+    cprintf(T("et un timer T1 qui DESCEND tout seul.\r\n",
+               "and a T1 timer that COUNTS DOWN alone.\r\n"));
+    cprintf(T("la premiere ecarte le bus flottant, la\r\n",
+               "the first rules out the floating bus,\r\n"));
+    cprintf(T("seconde ecarte de la simple RAM.\r\n",
+               "the second rules out plain RAM.\r\n"));
     pause();
 }
 
@@ -124,12 +139,16 @@ void t_voices(void)
     u8 ch;
 
     clrscr();
-    cprintf("2. LES SIX VOIES\r\n\n");
-    cprintf("do-mi-sol montant, AY #1 (voies 0-2)\r\n");
-    cprintf("puis AY #2 (voies 3-5).\r\n\n");
-    cprintf("si un seul AY repond, ce sont deux VIA\r\n");
-    cprintf("a des adresses differentes : le probleme\r\n");
-    cprintf("est dans $Cn80, pas dans le bus.\r\n\n");
+    cprintf(T("2. LES SIX VOIES\r\n\n", "2. THE SIX VOICES\r\n\n"));
+    cprintf(T("do-mi-sol montant, AY #1 (voies 0-2)\r\n",
+               "C-E-G ascending, AY #1 (voices 0-2)\r\n"));
+    cprintf(T("puis AY #2 (voies 3-5).\r\n\n", "then AY #2 (voices 3-5).\r\n\n"));
+    cprintf(T("si un seul AY repond, ce sont deux VIA\r\n",
+               "if only one AY responds, these are two VIA\r\n"));
+    cprintf(T("a des adresses differentes : le probleme\r\n",
+               "at different addresses : the problem\r\n"));
+    cprintf(T("est dans $Cn80, pas dans le bus.\r\n\n",
+               "is in $Cn80, not in the bus.\r\n\n"));
 
     /* Arpege de do majeur sur deux octaves : do4 mi4 sol4 do5 mi5 sol5.
      *
@@ -139,13 +158,14 @@ void t_voices(void)
      * l'octave ne se divise pas en parts egales. */
     for (ch = 0; ch < 6; ++ch) {
         static const u8 triade[6] = { 48, 52, 55, 60, 64, 67 };
-        cprintf("  voie %u  (AY #%u)\r\n", ch, (u8)(ch >= 3) + 1);
+        cprintf(T("  voie %u  (AY #%u)\r\n", "  voice %u  (AY #%u)\r\n"),
+                ch, (u8)(ch >= 3) + 1);
         note(ch, triade[ch], 12, 400);
     }
 
     /* Enveloppe materielle : une note qui s'eteint seule. Si la gamme marche
      * mais pas ceci, le probleme est dans r11-r13, pas dans le bus. */
-    cprintf("\r\n  enveloppe (declin)\r\n");
+    cprintf(T("\r\n  enveloppe (declin)\r\n", "\r\n  envelope (decay)\r\n"));
     MB_REG(0, AY_TONE_A_LO) = (u8)(mb_note_period(60) & 0xFF);   /* do5 */
     MB_REG(0, AY_TONE_A_HI) = (u8)(mb_note_period(60) >> 8);
     MB_REG(0, AY_ENV_LO)    = 0x00;
@@ -171,41 +191,51 @@ void t_tick(void)
     u16 t0;
 
     clrscr();
-    cprintf("3. LA BASE DE TEMPS\r\n\n");
+    cprintf(T("3. LA BASE DE TEMPS\r\n\n", "3. THE TIMEBASE\r\n\n"));
 
     hook_calls = 0;
     mbt_hook(tick_hook);
 
     if (mbt_start(mbt_latch(MBT_HZ_50), MBT_IRQ)) {
         mode = MBT_IRQ;
-        cprintf("mode IRQ obtenu (latch %u)\r\n", mbt_latch(MBT_HZ_50));
-        cprintf("le tick doit avancer TOUT SEUL.\r\n");
+        cprintf(T("mode IRQ obtenu (latch %u)\r\n", "IRQ mode obtained (latch %u)\r\n"),
+                mbt_latch(MBT_HZ_50));
+        cprintf(T("le tick doit avancer TOUT SEUL.\r\n",
+                   "the tick must advance ON ITS OWN.\r\n"));
     } else {
-        cprintf("IRQ refusee -> repli polling.\r\n");
-        cprintf("(pas de ProDOS ? table pleine ?)\r\n");
+        cprintf(T("IRQ refusee -> repli polling.\r\n",
+                   "IRQ refused -> falling back to polling.\r\n"));
+        cprintf(T("(pas de ProDOS ? table pleine ?)\r\n",
+                   "(no ProDOS? table full?)\r\n"));
         if (!mbt_start(mbt_latch(MBT_HZ_50), MBT_POLL)) {
-            cprintf("polling refuse aussi. abandon.\r\n");
+            cprintf(T("polling refuse aussi. abandon.\r\n",
+                       "polling refused too. giving up.\r\n"));
             pause();
             return;
         }
         mode = MBT_POLL;
     }
 
-    cprintf("\r\n50 Hz attendus : ~50 ticks/seconde.\r\n");
-    cprintf("PERDUS compte les ticks manques --\r\n");
-    cprintf("c'est la mesure du hoquet disque.\r\n\n");
+    cprintf(T("\r\n50 Hz attendus : ~50 ticks/seconde.\r\n",
+               "\r\n50 Hz expected : ~50 ticks/second.\r\n"));
+    cprintf(T("PERDUS compte les ticks manques --\r\n",
+               "LOST counts missed ticks --\r\n"));
+    cprintf(T("c'est la mesure du hoquet disque.\r\n\n",
+               "it's the measure of the disk hiccup.\r\n\n"));
 
     t0 = mbt_ticks;
     while (!kbhit()) {
         if (mode == MBT_POLL)
             mbt_poll();
         gotoxy(0, 11);
-        cprintf("ticks %5u  hook %5u  perdus %5u\r\n",
+        cprintf(T("ticks %5u  hook %5u  perdus %5u\r\n",
+                   "ticks %5u  hook %5u  lost %5u\r\n"),
                 (u16)(mbt_ticks - t0), hook_calls, mbt_lost);
         /* Cout du handler NU : ProDOS, banques memoire, sauvegarde de la page
          * zero, et un hook qui ne fait qu'incrementer. C'est le plancher --
          * tout ce qu'un lecteur ajoutera viendra par-dessus. */
-        cprintf("pic handler %5u cyc / %u  %u dep.",
+        cprintf(T("pic handler %5u cyc / %u  %u dep.",
+                   "handler peak %5u cyc / %u  %u miss."),
                 mbt_maxdur, mbt_period, mbt_over);
     }
     cgetc();
@@ -230,12 +260,18 @@ void t_fx(void)
     }
     gotoxy(0, 6);
     cprintf("---------------------------------------\r\n");
-    cprintf("1-9 A-J un son   Q sortir\r\n\n");
-    cprintf("le COMPTEUR ne doit jamais se figer :\r\n");
-    cprintf("un effet est ARME, pas joue -- c'est le\r\n");
-    cprintf("tick qui le fait avancer.\r\n\n");
-    cprintf("ils vivent sur l'AY #2, donc une musique\r\n");
-    cprintf("sur l'AY #1 n'est pas coupee.");
+    cprintf(T("1-9 A-J un son   Q/Echap sortir\r\n\n",
+               "1-9 A-J a sound   Q/Esc exit\r\n\n"));
+    cprintf(T("le COMPTEUR ne doit jamais se figer :\r\n",
+               "the COUNTER must never freeze :\r\n"));
+    cprintf(T("un effet est ARME, pas joue -- c'est le\r\n",
+               "an effect is ARMED, not played -- it's\r\n"));
+    cprintf(T("tick qui le fait avancer.\r\n\n",
+               "the tick that makes it advance.\r\n\n"));
+    cprintf(T("ils vivent sur l'AY #2, donc une musique\r\n",
+               "they live on AY #2, so music\r\n"));
+    cprintf(T("sur l'AY #1 n'est pas coupee.",
+               "on AY #1 isn't cut off."));
 
     mbt_hook(mb_fx_tick);
     if (!mbt_start(mbt_latch(MBT_HZ_50), MBT_IRQ))
@@ -245,12 +281,12 @@ void t_fx(void)
         if (mbt_mode() == MBT_POLL)
             mbt_poll();
         gotoxy(0, 16);
-        cprintf("compteur %5u   %-9s %s   ",
+        cprintf(T("compteur %5u   %-9s %s   ", "counter %5u   %-9s %s   "),
                 ++spin, id ? sons_noms[id - 1] : "-",
-                mb_fx_active() ? "(en cours)" : "          ");
+                mb_fx_active() ? T("(en cours)", "(running) ") : "          ");
         if (kbhit()) {
             k = cgetc();
-            if (k == 'q' || k == 'Q')
+            if (k == 'q' || k == 'Q' || k == 27)
                 break;
             i = 0xFF;
             if (k >= '1' && k <= '9')            i = (u8)(k - '1');
@@ -365,9 +401,12 @@ static void put16(const char *p)
         cputc(p[i]);
 }
 
-/* Coeur commun a MUSIQUE et TIMBRES : meme ecran, meme clavier, seule la
- * liste change. `heading` fait exactement 7 caracteres -- comme "MUSIQUE" et
- * "TIMBRES" -- pour garder l'alignement de "/A2MB/" sans le recalculer. */
+/* Coeur commun a MUSIQUE/MUSIC, TIMBRES et PT3 : meme ecran, meme clavier,
+ * seule la liste change. `heading` etait suppose faire exactement 7
+ * caracteres ("MUSIQUE", "TIMBRES") pour aligner "/A2MB/" sans le
+ * recalculer -- casse des que "MUSIQUE" devient "MUSIC" (5) ou qu'on ajoute
+ * "PT3" (3). `%-7s` remplace `%s` : n'importe quelle longueur <=7 s'aligne
+ * pareil, et heading n'a plus besoin d'etre pad a la main. */
 static void module_screen(const char *heading, const char *const *list, u8 n)
 {
     u8  k, i, sel = 0, loaded = 0, redraw = 1;
@@ -377,7 +416,7 @@ static void module_screen(const char *heading, const char *const *list, u8 n)
     for (;;) {
         if (redraw) {
             clrscr();
-            cprintf("%s                       /A2MB/\r\n", heading);
+            cprintf("%-7s                       /A2MB/\r\n", heading);
             cprintf("---------------------------------------");   /* 39, pas 40 :
              * la 40e colonne d'un ecran 40 colonnes fait passer a la ligne,
              * donc defiler tout l'ecran -- et la liste perd une entree. */
@@ -419,11 +458,14 @@ static void module_screen(const char *heading, const char *const *list, u8 n)
              * la liste vraiment affichee, donc ce `if` est necessaire, pas du
              * code mort. Au-dela de 15 (touche 'F'), etendre a la main. */
             if (n <= 9)
-                cprintf("1-%c charger  P pause  S stop  Q sortie", touche((u8)(n - 1)));
+                cprintf(T("1-%c charger  P pause  S stop  Q/Echap sortie",
+                          "1-%c load  P pause  S stop  Q/Esc exit"), touche((u8)(n - 1)));
             else if (n == 10)
-                cprintf("1-9,A charger  P pause  S stop  Q sortie");
+                cprintf(T("1-9,A charger  P pause  S stop  Q/Echap sortie",
+                          "1-9,A load  P pause  S stop  Q/Esc exit"));
             else
-                cprintf("1-9,A-%c charger  P pause  S stop  Q sortie", touche((u8)(n - 1)));
+                cprintf(T("1-9,A-%c charger  P pause  S stop  Q/Echap sortie",
+                          "1-9,A-%c load  P pause  S stop  Q/Esc exit"), touche((u8)(n - 1)));
             redraw = 0;
             last = 0;
         }
@@ -443,21 +485,30 @@ static void module_screen(const char *heading, const char *const *list, u8 n)
              * dur : le lecteur joue les deux. R = flux de registres (convertit
              * n'importe quoi), T = notes + instruments (quatre fois plus
              * compact, mais il faut connaitre les instruments). */
-            cprintf("  profil %c   %u AY   %u Hz        \r\n",
+            cprintf(T("  profil %c   %u AY   %u Hz        \r\n",
+                       "  profile %c   %u AY   %u Hz       \r\n"),
                     (char)a2m_profile(A2M_BUF), A2M_BUF[15], a2m_hz(A2M_BUF));
-            cprintf("  taille  %5u o   $%04X-$%04X   \r\n",
+            cprintf(T("  taille  %5u o   $%04X-$%04X   \r\n",
+                       "  size    %5u B   $%04X-$%04X   \r\n"),
                     tune_size, (u16)A2M_BUF, (u16)((u16)A2M_BUF + tune_size));
-            cprintf("  duree   %5u s   %u o/s        \r\n",
+            cprintf(T("  duree   %5u s   %u o/s        \r\n",
+                       "  time    %5u s   %u B/s        \r\n"),
                     tot / a2m_hz(A2M_BUF),
                     tot ? (u16)(tune_size / (tot / a2m_hz(A2M_BUF) + 1)) : 0);
-            cprintf("  trame   %5u / %-5u          \r\n", a2m_pos(), tot);
-            cprintf("  etat    %s                 \r\n",
-                    a2m_state() == A2M_PLAYING ? "en lecture"
-                  : a2m_state() == A2M_PAUSED  ? "en pause  " : "arrete    ");
-            cprintf("  pic %5u cyc / %u\r\n", mbt_maxdur, mbt_period);
-            cprintf("  dont evts %5u   envel %5u  \r\n",
+            cprintf(T("  trame   %5u / %-5u          \r\n",
+                       "  frame   %5u / %-5u          \r\n"), a2m_pos(), tot);
+            cprintf(T("  etat    %s                 \r\n",
+                       "  state   %s                 \r\n"),
+                    a2m_state() == A2M_PLAYING ? T("en lecture", "playing   ")
+                  : a2m_state() == A2M_PAUSED  ? T("en pause  ", "paused    ")
+                                                : T("arrete    ", "stopped   "));
+            cprintf(T("  pic %5u cyc / %u\r\n", "  peak %5u cyc / %u\r\n"),
+                    mbt_maxdur, mbt_period);
+            cprintf(T("  dont evts %5u   envel %5u  \r\n",
+                       "  incl. evts %5u   envel %5u  \r\n"),
                     a2m_t_ev, a2m_t_env);
-            cprintf("  tick %s %5u ticks %u perdus \r\n",
+            cprintf(T("  tick %s %5u ticks %u perdus \r\n",
+                       "  tick %s %5u ticks %u lost   \r\n"),
                     mbt_mode() == MBT_IRQ  ? "IRQ " :
                     mbt_mode() == MBT_POLL ? "POLL" : "----",
                     mbt_ticks, mbt_lost);
@@ -465,10 +516,12 @@ static void module_screen(const char *heading, const char *const *list, u8 n)
              * jouent PAR-DESSUS la musique, sans la couper. Un module a deux
              * AY prend tout -- et le dit. */
             if (A2M_BUF[15] == 1)
-                cprintf("  X : bruitage sur l'AY #2  %s   ",
-                        mb_fx_active() ? "(en cours)" : "          ");
+                cprintf(T("  X : bruitage sur l'AY #2  %s   ",
+                           "  X : effect on AY #2  %s   "),
+                        mb_fx_active() ? T("(en cours)", "(running) ") : "          ");
             else
-                cprintf("  (2 AY : plus de voie pour un effet)  ");
+                cprintf(T("  (2 AY : plus de voie pour un effet)  ",
+                           "  (2 AY : no voice left for an effect)  "));
         }
 
         if (mbt_mode() == MBT_POLL)
@@ -478,7 +531,7 @@ static void module_screen(const char *heading, const char *const *list, u8 n)
             continue;
 
         k = cgetc();
-        if (k == 'q' || k == 'Q')
+        if (k == 'q' || k == 'Q' || k == 27)
             break;
         sel = 0xFF;
         if (k >= '1' && k <= '9')                 sel = (u8)(k - '1');
@@ -489,7 +542,8 @@ static void module_screen(const char *heading, const char *const *list, u8 n)
             mbt_stop();
             if (!load_tune(list[sel])) {
                 clrscr();
-                cprintf("\r\n%s : introuvable ou pas un A2M.\r\n", list[sel]);
+                cprintf(T("\r\n%s : introuvable ou pas un A2M.\r\n",
+                           "\r\n%s : not found or not an A2M.\r\n"), list[sel]);
                 loaded = 0;
                 pause();
                 redraw = 1;
@@ -523,5 +577,19 @@ static void module_screen(const char *heading, const char *const *list, u8 n)
     mb_silence();
 }
 
-void t_music(void)       { module_screen("MUSIQUE", tunes,       N_TUNES); }
+void t_music(void)       { module_screen(T("MUSIQUE", "MUSIC"), tunes, N_TUNES); }
 void t_instruments(void) { module_screen("TIMBRES", instr_tunes, N_INSTR); }
+
+/* Huit morceaux ZX Spectrum PT3 (tools/a2mconv/pt32a2m.py), profil R --
+ * ecran separe expres : ce sont des sources tierces (Shiru, CC-BY, cf.
+ * demo/pt3/SOURCES.md), pas la playlist choisie pour la vitrine. Profil R
+ * systematiquement : le format PT3 ne dit rien de ses instruments au
+ * convertisseur (cf. la docstring de tools/a2mconv/pt3.py), contrairement
+ * aux partitions texte de MUSIQUE/TIMBRES qui declarent les leurs. */
+static const char *const pt3_tunes[] = {
+    "PT3/MEHALAN.A2M", "PT3/OLDLOVE.A2M", "PT3/MOONLIGHT.A2M", "PT3/NOSTALGY.A2M",
+    "PT3/HARD.A2M", "PT3/KAKVSEGDA.A2M", "PT3/CHINWATCH.A2M", "PT3/SUMMER.A2M"
+};
+#define N_PT3 (sizeof(pt3_tunes) / sizeof(pt3_tunes[0]))
+
+void t_pt3(void) { module_screen("PT3", pt3_tunes, N_PT3); }

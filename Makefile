@@ -40,7 +40,7 @@ ASRC     := $(wildcard $(SRCDIR)/*.s)
 OBJS     := $(patsubst $(SRCDIR)/%.c,$(BUILDDIR)/%.o,$(CSRC)) \
             $(patsubst $(SRCDIR)/%.s,$(BUILDDIR)/%.o,$(ASRC))
 
-.PHONY: all lib demo dsk music scores clean hosttest pt3test emu-check
+.PHONY: all lib demo dsk music scores clean hosttest pt3test pt3corpus i18ncheck emu-check
 
 all: lib demo
 
@@ -121,6 +121,17 @@ demo/midi/%.mid:
 	 echo "  Sans eux, 'make dsk' ne peut pas produire les six morceaux qui"; \
 	 echo "  en derivent. Les quatre partitions texte de demo/scores/, elles,"; \
 	 echo "  se convertissent sans rien telecharger : 'make scores'."; \
+	 echo; \
+	 echo "  Une disquette deja construite est dans le depot : build/a2mb-test.dsk"; \
+	 echo; exit 1
+
+demo/pt3/%.pt3:
+	@echo; echo "  MANQUANT : $@"; echo; \
+	 echo "  Les PT3 sources ne sont pas redistribues (cf. demo/pt3/SOURCES.md,"; \
+	 echo "  qui donne la commande curl de chacun des huit fichiers et credite"; \
+	 echo "  Shiru, leur auteur -- CC-BY sur ses morceaux originaux)."; \
+	 echo; \
+	 echo "  Sans eux, 'make dsk' ne peut pas produire l'ecran PT3."; \
 	 echo; \
 	 echo "  Une disquette deja construite est dans le depot : build/a2mb-test.dsk"; \
 	 echo; exit 1
@@ -217,6 +228,62 @@ YM2A2M := tools/a2mconv/ym2a2m.py
 demo/music/ANDROIDS.A2M: demo/ym/androids.ym $(YM2A2M) tools/a2mconv/ym.py tools/a2mconv/a2m.py
 	@mkdir -p demo/music
 	@python3 $(YM2A2M) $< -o $@ --seconds 50 --report
+
+# --- L'ecran PT3 (ZX Spectrum) --------------------------------------------
+# Huit morceaux de Shiru (shiru.untergrund.net), CC-BY sur ses originaux --
+# cf. demo/pt3/SOURCES.md. Profil R systematiquement (pt32a2m.py ne produit
+# que ca, cf. spec.md §5.7) : le PT3 ne dit rien de ses instruments, comme un
+# YM. Regles explicites plutot qu'un motif generique : chaque morceau a sa
+# propre troncature, choisie pour ne JAMAIS couper avant le point de
+# bouclage naturel du morceau (--report donne ce point ; couper avant produit
+# une "boucle" d'une seule trame -- pas fausse, juste pas musicale) et pour
+# tenir, les huit ensemble, dans la marge dispo une fois le menu bilingue
+# construit (mesure : 47 104 o = 92 blocs libres apres l'i18n -- et chaque
+# fichier ProDOS de plus de 512 o coute un bloc d'INDEX en plus de ses blocs
+# de donnees, pas seulement round(taille/512) : premiere tentative a echoue
+# de justesse la-dessus).
+PT32A2M := tools/a2mconv/pt32a2m.py
+
+demo/music/pt3/MEHALAN.A2M: demo/pt3/mehalanholia.pt3 $(PT32A2M) tools/a2mconv/pt3.py tools/a2mconv/a2m.py
+	@mkdir -p demo/music/pt3
+	@python3 $(PT32A2M) $< -o $@ --title "MEHALONHOLIA" --author SHIRU --seconds 9
+
+demo/music/pt3/OLDLOVE.A2M: demo/pt3/oldlove.pt3 $(PT32A2M) tools/a2mconv/pt3.py tools/a2mconv/a2m.py
+	@mkdir -p demo/music/pt3
+	@python3 $(PT32A2M) $< -o $@ --title "OLD LOVE" --author SHIRU --seconds 30
+
+demo/music/pt3/MOONLIGHT.A2M: demo/pt3/moonlight.pt3 $(PT32A2M) tools/a2mconv/pt3.py tools/a2mconv/a2m.py
+	@mkdir -p demo/music/pt3
+	@python3 $(PT32A2M) $< -o $@ --title "MOONLIGHT" --author SHIRU --seconds 23
+
+demo/music/pt3/NOSTALGY.A2M: demo/pt3/199Xnostalgy.pt3 $(PT32A2M) tools/a2mconv/pt3.py tools/a2mconv/a2m.py
+	@mkdir -p demo/music/pt3
+	@python3 $(PT32A2M) $< -o $@ --title "199X NOSTALGY" --author SHIRU --seconds 12
+
+# Le nom embarque dans le fichier source est une blague en translitteration
+# ("Muza molchit, muzykant mochit ;)"), pas un titre presentable sur un
+# panneau de credits -- HARD (le nom sur disque) sert de titre aussi.
+demo/music/pt3/HARD.A2M: demo/pt3/hard.pt3 $(PT32A2M) tools/a2mconv/pt3.py tools/a2mconv/a2m.py
+	@mkdir -p demo/music/pt3
+	@python3 $(PT32A2M) $< -o $@ --title "HARD" --author SHIRU --seconds 20
+
+demo/music/pt3/KAKVSEGDA.A2M: demo/pt3/kakvsegda.pt3 $(PT32A2M) tools/a2mconv/pt3.py tools/a2mconv/a2m.py
+	@mkdir -p demo/music/pt3
+	@python3 $(PT32A2M) $< -o $@ --title "KAK VSEGDA..." --author SHIRU --seconds 14
+
+demo/music/pt3/CHINWATCH.A2M: demo/pt3/chinesewatch.pt3 $(PT32A2M) tools/a2mconv/pt3.py tools/a2mconv/a2m.py
+	@mkdir -p demo/music/pt3
+	@python3 $(PT32A2M) $< -o $@ --title "CHINESE WATCH" --author SHIRU --seconds 15
+
+demo/music/pt3/SUMMER.A2M: demo/pt3/summer.pt3 $(PT32A2M) tools/a2mconv/pt3.py tools/a2mconv/a2m.py
+	@mkdir -p demo/music/pt3
+	@python3 $(PT32A2M) $< -o $@ --title "SUMMER" --author SHIRU --seconds 10
+
+PT3TUNES := demo/music/pt3/MEHALAN.A2M demo/music/pt3/OLDLOVE.A2M \
+            demo/music/pt3/MOONLIGHT.A2M demo/music/pt3/NOSTALGY.A2M \
+            demo/music/pt3/HARD.A2M demo/music/pt3/KAKVSEGDA.A2M \
+            demo/music/pt3/CHINWATCH.A2M demo/music/pt3/SUMMER.A2M
+TUNES     += $(PT3TUNES)
 
 # --- Le repertoire de demonstration --------------------------------------
 # Choisi pour ce que chaque piece fait ressortir de la carte, pas au hasard :
@@ -326,6 +393,14 @@ $(DSK): $(DEMOBIN) $(TUNES) $(PRODOS_TPL) $(AC_JAR) $(LOADER) | $(BUILDDIR)
 	  echo "  + $$n"; \
 	  java -jar $(AC_JAR) -p $@ $$n bin 0 < $$m; \
 	done
+	@# PT3/ : meme raison que TIMBRES/ -- une seule entree en racine pour huit
+	@# fichiers. Chemins a garder en lockstep, EXACTEMENT, avec pt3_tunes[]
+	@# dans demo/src/tests.c.
+	@for m in $(PT3TUNES); do \
+	  n=PT3/$$(basename $$m); \
+	  echo "  + $$n"; \
+	  java -jar $(AC_JAR) -p $@ $$n bin 0 < $$m; \
+	done
 	@echo
 	java -jar $(AC_JAR) -l $@
 	@echo "Disquette prete : $@   (volume /$(VOLNAME)/)"
@@ -343,6 +418,16 @@ hosttest: | $(BUILDDIR)
 # docstring de test/pt3_test.py.
 pt3test:
 	python3 test/pt3_test.py
+
+# Contre de VRAIS fichiers PT3 (CC-BY, cf. test/pt3_corpus/SOURCES.md).
+# Best-effort : ne casse pas le build si le corpus n'a pas ete telecharge.
+pt3corpus:
+	python3 test/pt3_corpus_test.py
+
+# Parite des %-specificateurs FR/EN (demo/src/lang.h) -- pas un substitut a
+# la relecture humaine, cf. tools/i18ncheck.py.
+i18ncheck:
+	python3 tools/i18ncheck.py
 
 # --- Banc d'essai --------------------------------------------------------
 emu-check:

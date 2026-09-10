@@ -53,14 +53,14 @@ def test_scale():
     check("pas de bouclage explicite -> loop_frame = 0", loop_frame == 0)
 
     states = _replay(frames)
-    exp0 = pt3._period_apple(24)
+    exp0 = pt3.period_for(mod, 24)
     per0 = (states[0][1] << 8) | states[0][0]
     check("periode ligne 0 (note 24)", per0 == exp0, "attendu %d obtenu %d" % (exp0, per0))
     check("volume voie A = 15 en ligne 0", states[0][8] == 15)
     check("voies B/C silencieuses", states[0][9] == 0 and states[0][10] == 0)
     check("mixer : ton A actif (bit0 a 0)", states[0][7] & 1 == 0)
 
-    exp1 = pt3._period_apple(25)
+    exp1 = pt3.period_for(mod, 25)
     per1 = (states[3][1] << 8) | states[3][0]
     check("periode ligne 1 (note 25, trame 3)", per1 == exp1)
     check("volume decroit a 14 en ligne 1", states[3][8] == 14)
@@ -75,7 +75,7 @@ def test_arpeggio():
     states = _replay(frames)
     got = [(s[1] << 8) | s[0] for s in states]
     expected_notes = ([36, 40, 43] * 8)[:len(frames)]
-    expected = [pt3._period_apple(n) for n in expected_notes]
+    expected = [pt3.period_for(mod, n) for n in expected_notes]
     check("arpege 0/+4/+7 rejoue TRAME PAR TRAME (pas ligne par ligne)",
           got == expected,
           "premier ecart a l'indice %d" % next(
@@ -89,7 +89,7 @@ def test_skip():
     check("15 trames (5 lignes x vitesse 3)", len(frames) == 15, "obtenu %d" % len(frames))
 
     states = _replay(frames)
-    exp_per = pt3._period_apple(40)
+    exp_per = pt3.period_for(mod, 40)
     held = all((s[1] << 8) | s[0] == exp_per and s[8] == 10 for s in states)
     check("note et volume tenus sur toute la duree du saut", held)
 
@@ -115,19 +115,19 @@ def test_envelope():
 
 
 def test_effect_skipped():
-    print("effect_skipped() -- effet consomme, jamais applique en v1")
+    print("effect_skipped() -- un glissando ($01), applique, sans desynchro")
     mod = pt3.parse(fx.effect_skipped())
-    check("un effet compte et signale", mod["n_effects_ignored"] == 1,
-          "obtenu %d" % mod["n_effects_ignored"])
+    check("un effet compte", mod["n_effects"] == 1, "obtenu %d" % mod["n_effects"])
+    check("0 effet non applique ($01 EST applique)", mod["n_effects_unapplied"] == 0)
 
     frames, _ = pt3.to_apple(mod)
     check("6 trames (2 lignes x vitesse 3)", len(frames) == 6)
     states = _replay(frames)
-    exp0, exp1 = pt3._period_apple(24), pt3._period_apple(28)
+    exp0, exp1 = pt3.period_for(mod, 24), pt3.period_for(mod, 28)
     per0 = (states[0][1] << 8) | states[0][0]
     per1 = (states[3][1] << 8) | states[3][0]
-    check("note de la ligne 0 correcte malgre l'octet d'effet", per0 == exp0)
-    check("ligne 1 NON desynchronisee par l'effet ignore", per1 == exp1)
+    check("note de la ligne 0 correcte a la 1ere trame (glissando pas encore actif)", per0 == exp0)
+    check("ligne 1 (nouvelle note) NON desynchronisee par l'effet de la ligne 0", per1 == exp1)
 
 
 def test_loop():
