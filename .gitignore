@@ -40,9 +40,10 @@ demo/music/pt3/*.a2m
 __pycache__/
 *.pyc
 
-# Artefacts de build .NET (tools/pt3oracle/)
-tools/pt3oracle/bin/
-tools/pt3oracle/obj/
+# Oracle PT3 (outil de verification ponctuel, pas une dependance du projet --
+# vendorise PT3Play.cs/AYEmu.cs de github.com/benbaker76/PT3Play, MIT ; a
+# re-vendoriser depuis cette source si besoin de le rejouer, cf. spec.md §5.7)
+tools/pt3oracle/
 .venv/
 
 # Materiel de reference tiers
