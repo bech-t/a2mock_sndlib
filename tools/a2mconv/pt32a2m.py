@@ -54,14 +54,12 @@ def main():
               % (pt3.APPLE_CLOCK / pt3.ZX_CLOCK))
         if mod["n_effects"]:
             print("   effets rencontres : %d (glissando/portamento/vibrato/"
-                  "offsets/vitesse -- appliques)" % mod["n_effects"])
-        if mod["n_effects_unapplied"]:
-            print("   /!\\ %d glissando(s) d'ENVELOPPE rencontre(s) et IGNORES "
-                  "-- seul effet encore non applique, cf. pt3.py."
-                  % mod["n_effects_unapplied"])
-        print("   /!\\ enveloppe/bruit propres a l'echantillon (bits de "
-              "\"sliding\" accumules) : valeur instantanee seulement, pas "
-              "l'accumulation trame par trame -- cf. docstring de pt3.py.")
+                  "offsets/vitesse/glissando d'enveloppe -- tous appliques)"
+                  % mod["n_effects"])
+        print("   /!\\ route enveloppe (echantillon + effet $08) : implementee "
+              "d'apres PT3Play.cs mais NON verifiable contre l'oracle (sa "
+              "propre route enveloppe est confirmee cassee) -- plausible, "
+              "pas prouvee. Cf. docstring de pt3.py.")
 
         # Aller-retour : comme ym2a2m.py, le decodeur doit relire EXACTEMENT
         # ce qu'on a ecrit.

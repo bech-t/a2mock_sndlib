@@ -86,7 +86,7 @@ def test_skip():
     print("skip_lines() -- note + $B1 (sauter 3 lignes)")
     mod = pt3.parse(fx.skip_lines())
     frames, _ = pt3.to_apple(mod)
-    check("15 trames (5 lignes x vitesse 3)", len(frames) == 15, "obtenu %d" % len(frames))
+    check("9 trames (3 lignes x vitesse 3)", len(frames) == 9, "obtenu %d" % len(frames))
 
     states = _replay(frames)
     exp_per = pt3.period_for(mod, 40)
@@ -118,7 +118,6 @@ def test_effect_skipped():
     print("effect_skipped() -- un glissando ($01), applique, sans desynchro")
     mod = pt3.parse(fx.effect_skipped())
     check("un effet compte", mod["n_effects"] == 1, "obtenu %d" % mod["n_effects"])
-    check("0 effet non applique ($01 EST applique)", mod["n_effects_unapplied"] == 0)
 
     frames, _ = pt3.to_apple(mod)
     check("6 trames (2 lignes x vitesse 3)", len(frames) == 6)
@@ -144,9 +143,32 @@ def test_loop():
           loop_frame == 4 * speed, "attendu %d obtenu %d" % (4 * speed, loop_frame))
 
 
+def test_truncated():
+    print("fichiers tronques/corrompus -- ValueError claire, pas une IndexError brute")
+    check("chaine vide : signature absente",
+          _raises_value_error(lambda: pt3.parse(b"")))
+    check("signature absente",
+          _raises_value_error(lambda: pt3.parse(b"pas un pt3 du tout")))
+    check("en-tete incomplet (signature seule)",
+          _raises_value_error(lambda: pt3.parse(b"ProTracker 3.5" + b"\x00" * 20)))
+    real = open("test/pt3_corpus/oldlove.pt3", "rb").read()
+    check("fichier reel tronque en plein milieu",
+          _raises_value_error(lambda: pt3.parse(real[:300])))
+
+
+def _raises_value_error(fn):
+    try:
+        fn()
+    except ValueError:
+        return True
+    except Exception:
+        return False
+    return False
+
+
 def main():
     for fn in (test_scale, test_arpeggio, test_skip, test_envelope,
-               test_effect_skipped, test_loop):
+               test_effect_skipped, test_loop, test_truncated):
         fn()
         print()
 

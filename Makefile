@@ -128,7 +128,7 @@ demo/midi/%.mid:
 demo/pt3/%.pt3:
 	@echo; echo "  MANQUANT : $@"; echo; \
 	 echo "  Les PT3 sources ne sont pas redistribues (cf. demo/pt3/SOURCES.md,"; \
-	 echo "  qui donne la commande curl de chacun des huit fichiers et credite"; \
+	 echo "  qui donne la commande curl de chacun des quatre fichiers et credite"; \
 	 echo "  Shiru, leur auteur -- CC-BY sur ses morceaux originaux)."; \
 	 echo; \
 	 echo "  Sans eux, 'make dsk' ne peut pas produire l'ecran PT3."; \
@@ -230,58 +230,53 @@ demo/music/ANDROIDS.A2M: demo/ym/androids.ym $(YM2A2M) tools/a2mconv/ym.py tools
 	@python3 $(YM2A2M) $< -o $@ --seconds 50 --report
 
 # --- L'ecran PT3 (ZX Spectrum) --------------------------------------------
-# Huit morceaux de Shiru (shiru.untergrund.net), CC-BY sur ses originaux --
+# Quatre morceaux de Shiru (shiru.untergrund.net), CC-BY sur ses originaux --
 # cf. demo/pt3/SOURCES.md. Profil R systematiquement (pt32a2m.py ne produit
 # que ca, cf. spec.md §5.7) : le PT3 ne dit rien de ses instruments, comme un
-# YM. Regles explicites plutot qu'un motif generique : chaque morceau a sa
-# propre troncature, choisie pour ne JAMAIS couper avant le point de
-# bouclage naturel du morceau (--report donne ce point ; couper avant produit
-# une "boucle" d'une seule trame -- pas fausse, juste pas musicale) et pour
-# tenir, les huit ensemble, dans la marge dispo une fois le menu bilingue
-# construit (mesure : 47 104 o = 92 blocs libres apres l'i18n -- et chaque
-# fichier ProDOS de plus de 512 o coute un bloc d'INDEX en plus de ses blocs
-# de donnees, pas seulement round(taille/512) : premiere tentative a echoue
-# de justesse la-dessus).
+# YM.
+#
+# Quatre, pas huit : a l'ecoute, deux des huit (mehalanholia.pt3, hard.pt3)
+# sonnaient faux plus souvent que les six autres -- et ce sont precisement
+# les deux dont pt3.table_anchor() signalait un ancrage de justesse peu
+# fiable (`(ancrage incertain, +13c)`, cf. `make pt3corpus`) : la table de
+# frequence qu'ils utilisent (famille ASM, freq_table=2) ne s'aligne sur
+# aucun 12-TET propre a mieux que 13 cents, contre les tables "ST"
+# (freq_table=1) des six autres, precises a moins d'un cent. Ecartes, pas
+# juste raccourcis : allonger un morceau qui sonne faux ne le rend pas
+# juste. Kakvsegda et 199Xnostalgy sont ecartes aussi, pour liberer assez de
+# marge disque pour que les quatre qui restent jouent ENTIERS ou presque,
+# plutot que huit extraits de dix secondes.
+#
+# Regles explicites plutot qu'un motif generique : chaque morceau a sa
+# propre duree, choisie pour privilegier l'integralite (oldlove, le moins
+# cher a l'octet, joue ENTIER) et sinon aller aussi loin que le budget le
+# permet, toujours au-dela du point de bouclage naturel (--report le donne ;
+# couper avant produit une "boucle" d'une seule trame -- pas fausse, juste
+# pas musicale). Budget mesure : 47 104 o = 92 blocs libres apres l'i18n --
+# et chaque fichier ProDOS de plus de 512 o coute un bloc d'INDEX en plus de
+# ses blocs de donnees, pas seulement round(taille/512).
 PT32A2M := tools/a2mconv/pt32a2m.py
 
-demo/music/pt3/MEHALAN.A2M: demo/pt3/mehalanholia.pt3 $(PT32A2M) tools/a2mconv/pt3.py tools/a2mconv/a2m.py
-	@mkdir -p demo/music/pt3
-	@python3 $(PT32A2M) $< -o $@ --title "MEHALONHOLIA" --author SHIRU --seconds 9
-
+# Entier : 80,3 s, 13 Ko -- l'un des moins chers a l'octet du lot (peu
+# d'effets), donc le seul qui peut se permettre l'integralite sans a lui
+# seul epuiser le budget des trois autres.
 demo/music/pt3/OLDLOVE.A2M: demo/pt3/oldlove.pt3 $(PT32A2M) tools/a2mconv/pt3.py tools/a2mconv/a2m.py
 	@mkdir -p demo/music/pt3
-	@python3 $(PT32A2M) $< -o $@ --title "OLD LOVE" --author SHIRU --seconds 30
+	@python3 $(PT32A2M) $< -o $@ --title "OLD LOVE" --author SHIRU
 
 demo/music/pt3/MOONLIGHT.A2M: demo/pt3/moonlight.pt3 $(PT32A2M) tools/a2mconv/pt3.py tools/a2mconv/a2m.py
 	@mkdir -p demo/music/pt3
-	@python3 $(PT32A2M) $< -o $@ --title "MOONLIGHT" --author SHIRU --seconds 23
-
-demo/music/pt3/NOSTALGY.A2M: demo/pt3/199Xnostalgy.pt3 $(PT32A2M) tools/a2mconv/pt3.py tools/a2mconv/a2m.py
-	@mkdir -p demo/music/pt3
-	@python3 $(PT32A2M) $< -o $@ --title "199X NOSTALGY" --author SHIRU --seconds 12
-
-# Le nom embarque dans le fichier source est une blague en translitteration
-# ("Muza molchit, muzykant mochit ;)"), pas un titre presentable sur un
-# panneau de credits -- HARD (le nom sur disque) sert de titre aussi.
-demo/music/pt3/HARD.A2M: demo/pt3/hard.pt3 $(PT32A2M) tools/a2mconv/pt3.py tools/a2mconv/a2m.py
-	@mkdir -p demo/music/pt3
-	@python3 $(PT32A2M) $< -o $@ --title "HARD" --author SHIRU --seconds 20
-
-demo/music/pt3/KAKVSEGDA.A2M: demo/pt3/kakvsegda.pt3 $(PT32A2M) tools/a2mconv/pt3.py tools/a2mconv/a2m.py
-	@mkdir -p demo/music/pt3
-	@python3 $(PT32A2M) $< -o $@ --title "KAK VSEGDA..." --author SHIRU --seconds 14
+	@python3 $(PT32A2M) $< -o $@ --title "MOONLIGHT" --author SHIRU --seconds 26
 
 demo/music/pt3/CHINWATCH.A2M: demo/pt3/chinesewatch.pt3 $(PT32A2M) tools/a2mconv/pt3.py tools/a2mconv/a2m.py
 	@mkdir -p demo/music/pt3
-	@python3 $(PT32A2M) $< -o $@ --title "CHINESE WATCH" --author SHIRU --seconds 15
+	@python3 $(PT32A2M) $< -o $@ --title "CHINESE WATCH" --author SHIRU --seconds 22
 
 demo/music/pt3/SUMMER.A2M: demo/pt3/summer.pt3 $(PT32A2M) tools/a2mconv/pt3.py tools/a2mconv/a2m.py
 	@mkdir -p demo/music/pt3
-	@python3 $(PT32A2M) $< -o $@ --title "SUMMER" --author SHIRU --seconds 10
+	@python3 $(PT32A2M) $< -o $@ --title "SUMMER" --author SHIRU --seconds 22
 
-PT3TUNES := demo/music/pt3/MEHALAN.A2M demo/music/pt3/OLDLOVE.A2M \
-            demo/music/pt3/MOONLIGHT.A2M demo/music/pt3/NOSTALGY.A2M \
-            demo/music/pt3/HARD.A2M demo/music/pt3/KAKVSEGDA.A2M \
+PT3TUNES := demo/music/pt3/OLDLOVE.A2M demo/music/pt3/MOONLIGHT.A2M \
             demo/music/pt3/CHINWATCH.A2M demo/music/pt3/SUMMER.A2M
 TUNES     += $(PT3TUNES)
 

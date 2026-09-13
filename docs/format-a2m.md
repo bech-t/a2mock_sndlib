@@ -256,7 +256,7 @@ puisque le lecteur croirait alors le tampon plein.
 | partition texte | `a2mconv.py` | T (R avec `--profile R`) |
 | MIDI | `midi2a2m.py` | T ou R, 3 ou 6 voix |
 | dump YM (Atari, ZX) | `ym2a2m.py` | R obligatoirement |
-| module PT3 (ZX Spectrum) | `pt32a2m.py` | R obligatoirement — notes, échantillons (amplitude/ton) et effets (glissando, portamento, vibrato, offsets, vitesse) interprétés à partir des tables publiées ; seul le glissando d'enveloppe (`$08`) reste comptabilisé mais non appliqué (spec.md §5.7). Conteneur, découpage et aller-retour vérifiés sur 8 fichiers CC-BY réels (`make pt3corpus`) ; aucune écoute ni comparaison à un lecteur tiers encore faite |
+| module PT3 (ZX Spectrum) | `pt32a2m.py` | R obligatoirement — notes, échantillons (amplitude/ton/enveloppe) et effets (glissando, portamento, vibrato, offsets, vitesse, glissando d'enveloppe) tous interprétés à partir des tables publiées. Vérifié registre à registre contre le lecteur PT3 original (`tools/pt3oracle/`), pas seulement round-trippé — six bugs d'interprétation trouvés et corrigés ainsi ; le flux colle exactement à l'oracle sur les 4 morceaux de la démo, à l'exception de r11/r12 (période d'enveloppe) : la formule de référence elle-même est confirmée cassée sur ces deux registres (spec.md §5.7), donc notre implémentation — bien que lue directement dans le lecteur original — reste *plausible*, pas *prouvée registre par registre*, faute d'un oracle fiable sur ce point précis |
 | par programme | `a2m.encode()` / `encode_t()` | les deux |
 
 Voir [Écrire de la musique en texte](partitions.md) pour le format de

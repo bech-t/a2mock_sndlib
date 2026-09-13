@@ -39,6 +39,10 @@ demo/music/pt3/*.a2m
 # Outils Python
 __pycache__/
 *.pyc
+
+# Artefacts de build .NET (tools/pt3oracle/)
+tools/pt3oracle/bin/
+tools/pt3oracle/obj/
 .venv/
 
 # Materiel de reference tiers

@@ -143,10 +143,14 @@ def arpeggio():
 
 def skip_lines():
     """Une note suivie d'un saut de 3 lignes : la note doit rester tenue
-    (meme hauteur/volume) sur les lignes sautees. Teste $B1."""
-    a = skip(3) + volume(10) + note(40) + end_row()
-    b = end_row() * 5
-    c = end_row() * 5
+    (meme hauteur/volume) sur les lignes sautees. Teste $B1 -- PERSISTANT
+    par voie dans la reference (Note_Skip_Counter=Number_Of_Notes_To_Skip
+    est reecrit a CHAQUE ligne qui s'execute, pas seulement celle qui porte
+    le $B1) : un seul evenement suffit ici, 3 lignes au total (1 reelle +
+    2 sautees, skip-1)."""
+    a = skip(3) + volume(10) + note(40)
+    b = end_row() * 3
+    c = end_row() * 3
     return build("SAUT", "TEST", order=[0],
                   pattern_streams={0: {"A": a, "B": b, "C": c}})
 

@@ -580,15 +580,22 @@ static void module_screen(const char *heading, const char *const *list, u8 n)
 void t_music(void)       { module_screen(T("MUSIQUE", "MUSIC"), tunes, N_TUNES); }
 void t_instruments(void) { module_screen("TIMBRES", instr_tunes, N_INSTR); }
 
-/* Huit morceaux ZX Spectrum PT3 (tools/a2mconv/pt32a2m.py), profil R --
+/* Quatre morceaux ZX Spectrum PT3 (tools/a2mconv/pt32a2m.py), profil R --
  * ecran separe expres : ce sont des sources tierces (Shiru, CC-BY, cf.
  * demo/pt3/SOURCES.md), pas la playlist choisie pour la vitrine. Profil R
  * systematiquement : le format PT3 ne dit rien de ses instruments au
  * convertisseur (cf. la docstring de tools/a2mconv/pt3.py), contrairement
- * aux partitions texte de MUSIQUE/TIMBRES qui declarent les leurs. */
+ * aux partitions texte de MUSIQUE/TIMBRES qui declarent les leurs.
+ *
+ * Quatre, pas huit : a l'ecoute, deux des huit sonnaient faux plus souvent
+ * que les autres -- ce sont ceux dont l'ancrage de justesse etait deja
+ * signale peu fiable par `make pt3corpus` (cf. le commentaire du Makefile,
+ * section PT3). Ecartes plutot que juste raccourcis. Les deux restants
+ * ecartes le sont pour liberer la marge disque necessaire a ce que les
+ * quatre qui restent jouent entiers ou presque, plutot que huit extraits de
+ * dix secondes. */
 static const char *const pt3_tunes[] = {
-    "PT3/MEHALAN.A2M", "PT3/OLDLOVE.A2M", "PT3/MOONLIGHT.A2M", "PT3/NOSTALGY.A2M",
-    "PT3/HARD.A2M", "PT3/KAKVSEGDA.A2M", "PT3/CHINWATCH.A2M", "PT3/SUMMER.A2M"
+    "PT3/OLDLOVE.A2M", "PT3/MOONLIGHT.A2M", "PT3/CHINWATCH.A2M", "PT3/SUMMER.A2M"
 };
 #define N_PT3 (sizeof(pt3_tunes) / sizeof(pt3_tunes[0]))
 

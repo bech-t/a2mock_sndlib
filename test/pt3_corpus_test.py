@@ -49,9 +49,9 @@ def main():
             flag = "" if confiance < 5 else " (ancrage incertain, %+.0fc)" % confiance
 
             print("%-18s OK   %5d trames  %3d motifs  %3d effets  "
-                  "%d non appliques  pire justesse %+.1f c%s" % (
+                  "pire justesse %+.1f c%s" % (
                       name, len(frames), len(mod["order"]),
-                      mod["n_effects"], mod["n_effects_unapplied"], pire, flag))
+                      mod["n_effects"], pire, flag))
             n_ok += 1
         except Exception as e:
             print("%-18s ECHEC  %r" % (name, e))

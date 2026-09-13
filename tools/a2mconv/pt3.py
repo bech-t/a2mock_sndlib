@@ -20,29 +20,80 @@ CE QUE CETTE VERSION FAIT :
     version de tracker (pt3_tables.py), pas une approximation par calcul ;
   - reechelonne l'horloge ZX -> Apple, exactement comme ym.py.
 
-CE QUI RESTE APPROXIME OU NON FAIT, deliberement :
-  - le GLISSANDO D'ENVELOPPE (effet $08) : comptabilise, jamais applique --
-    la formule de reference (`Env_Base_lo` relu comme un OFFSET FICHIER
-    dans `PT3Play.cs`) a l'air d'un bug de portage plutot que du
-    comportement reel ; reproduire une formule dont on doute ne vaudrait
-    pas mieux que ne rien faire ;
-  - le GLISSEMENT/L'ACCUMULATION D'ENVELOPPE ET DE BRUIT propres a
-    l'echantillon (bits de "sliding" de l'octet 0) : la valeur INSTANTANEE
-    du pas est appliquee, pas son accumulation trame par trame ;
-  - le déclenchement d'enveloppe lui-meme reste geré comme avant : la paire
-    (type, periode) au moment de la commande, pas le calcul complet de
-    `PT3_ChangeRegisters`.
+L'ORACLE STRICT DE §5.6 EXISTE ET A TOURNE (2026-09-10/11) : `PT3Play.cs`
+(portage C# direct du lecteur original de Sergey Bulba) compile et s'execute
+tel quel sous .NET 8/Linux -- voir spec.md §5.7 et tools/pt3oracle/README.md
+pour l'installation et le harnais de comparaison. Compare trame par trame,
+registre par registre, sur 4 fichiers reels, il a trouve et fait corriger
+SIX bugs reels que la seule relecture n'avait pas vus :
+  1. le mixer forcait une voie inactive a "desactivee" ; la reference la
+     laisse a "activee" (l'amplitude a 0 suffit a la taire) -- ecart des
+     la toute premiere trame ;
+  2. `$B1` (Number_Of_Notes_To_Skip) ajoutait N lignes vides au lieu de
+     N-1 -- Note_Skip_Counter est decompte a CHAQUE limite de ligne, la
+     ligne suivante n'arrive qu'apres N limites, pas N+1 ;
+  3. `$B1` est PERSISTANT PAR VOIE, pas ponctuel : la reference reecrit
+     Note_Skip_Counter = Number_Of_Notes_To_Skip a la fin de CHAQUE ligne
+     qui s'execute, que $B1 y soit reapparu ou non -- une valeur fixee une
+     fois continue donc a s'appliquer a tous les evenements suivants
+     jusqu'au prochain $B1 ;
+  4. `$10-$1F` (enveloppe + echantillon) ne divisait pas par deux l'octet
+     d'indice d'echantillon, contrairement a `$F0-$FF` qui partage le
+     meme octet -- un boitier "boucle == longueur" sur l'echantillon
+     mal indexe masquait le symptome au lieu de planter ;
+  5. le bruit (r6) n'etait JAMAIS reechelonne ZX -> Apple (ym.py le fait
+     deja pour le sien) -- transportait la periode source telle quelle ;
+  6. le glissando ($01) portait le nom `"glissando/tone"` dans la table des
+     effets mais le codage l'attendait sous `"glissando"` -- l'effet le
+     plus courant du corpus etait donc COMPTE comme applique sans jamais
+     l'etre, en silence, depuis le debut.
+Apres ces six corrections, le flux de registres (reechelonne ZX->Apple)
+colle a l'oracle EXACTEMENT, registre par registre, sur les 800 premieres
+trames de chacun des 4 morceaux de la demo -- aucun ecart nulle part en
+dehors de r11/r12 (periode d'enveloppe, voir juste en dessous : implementee,
+mais dont la correction reste PLAUSIBLE, pas PROUVEE).
 
-Rien de tout ca n'a ete comparé, registre a registre, a un lecteur PT3
-tiers en cours d'execution (l'oracle strict de §5.6). Ce qui EST vérifié :
-le conteneur et le decoupage d'une ligne, contre 8 fichiers PT3 reels
-(test/pt3_corpus/, CC-BY) -- voir spec.md §5.7 pour le detail et les dates.
+LA ROUTE ENVELOPPE (r11/r12), implementee mais NON VERIFIABLE :
+  la formule de reference elle-meme est cassee -- l'oracle CONFIRME que
+  `Env_Base_lo` vaut 0 tant qu'aucune commande d'enveloppe n'est survenue, et
+  que `AY_Sys_GetWord(Module, Env_Base_lo)` relit alors les DEUX PREMIERS
+  OCTETS DU FICHIER LUI-MEME ("Pr" de "ProTracker 3.") comme si c'etait une
+  periode -- verifie sur oldlove.pt3, trame 0 : oracle r11/r12 = 0x7250,
+  exactement "Pr" en petit-boutien. Bug confirme du portage (ou de sa
+  source), pas une formule a reproduire : impossible de comparer notre sortie
+  a un oracle dont la sortie de reference est elle-meme fausse sur ce point
+  precis. `to_apple()` implemente donc la route enveloppe (base fixee par la
+  commande d'enveloppe + AddToEnv accumule par voie depuis l'octet de
+  donnees d'echantillon qui porte le bit route-enveloppe + glissement propre
+  a l'effet $08) directement d'apres la lecture de PT3_ChangeRegisters/
+  PT3_PatternInterpreter, register r11/r12 ecrit A CHAQUE TRAME (pas
+  seulement au declenchement, puisqu'il peut desormais varier entre deux
+  commandes) ; r13 (forme) reste ecrit UNIQUEMENT au declenchement, comme
+  avant (l'ecrire rearmerait le generateur materiel a chaque trame). C'est
+  la seule piece du convertisseur qui reste "plausible" plutot que "prouvee
+  registre par registre" -- documente ici et dans spec.md §5.7 pour que ce
+  ne soit pas oublie.
+
+CE QUI RESTE NON FAIT, et POURQUOI :
+  - TURBOSOUND (6 voix, deux sous-fichiers PT3 chaines) : non lu du tout.
+    La detection cote reference (`PT3_FindSig` + `Array.Copy` dans
+    `PT3_Init`) a l'air elle-meme fausse (offset RELATIF a la fenetre de
+    recherche utilise comme position ABSOLUE), et aucun fichier TurboSound
+    sous licence claire n'est disponible pour verifier -- voir spec.md
+    §5.7. Un module a 2 sous-fichiers se lirait aujourd'hui comme un
+    module 3 voix ordinaire (le second sous-fichier ignore).
+
+Fichier tronque ou corrompu : `ValueError` claire (pas une IndexError sans
+contexte) des la signature ou la taille minimale, et a la premiere lecture
+hors bornes plus loin dans le flux -- voir `parse()`.
 
 Reference du format : README_pt3.txt de Vince Weaver (deater.net) pour le
 conteneur ; PT3Play.cs (github.com/benbaker76/PT3Play, MIT -- portage direct
 du lecteur original de Sergey Bulba, l'auteur du format) pour tout le reste,
 la doc en prose s'etant averee ambigue sur un point et fausse sur un autre
-(voir le commentaire de _parse_channel_stream).
+(voir le commentaire de _parse_channel_stream) -- et l'oracle construit a
+partir de ce meme PT3Play.cs a son tour trouve six bugs que la prose
+n'aurait jamais pu reveler.
 """
 
 import math
@@ -146,7 +197,7 @@ def _s16le(d, off):
 # entre elles ; un octet appartient a une seule.
 
 EFFECT_NAMES = {
-    0x01: "glissando/tone",
+    0x01: "glissando",
     0x02: "portamento",
     0x03: "sample-offset",
     0x04: "ornament-offset",
@@ -211,17 +262,24 @@ def _parse_channel_stream(d, start):
     `$B1` (sauter N lignes) etire l'evenement qui vient d'etre construit
     sur les N lignes suivantes, representees par des evenements vides.
 
-    Retourne (evenements, n_effets_total, n_effets_non_appliques). Seul
-    $08 (glissando d'enveloppe) est compte comme "non applique" -- les
-    autres sont interpretes par to_apple() (cf. docstring du module)."""
+    Retourne (evenements, n_effets_total) -- tous les effets connus sont
+    desormais interpretes par to_apple() (cf. docstring du module)."""
     rows = []
     n_effects = 0
-    n_unapplied = 0
     p = start
     n = len(d)
+    # $B1 (Number_Of_Notes_To_Skip) est PERSISTANT PAR VOIE dans la
+    # reference : PT3Play.cs ecrit Note_Skip_Counter = Number_Of_Notes_To_Skip
+    # a la fin de CHAQUE ligne qui s'execute, que $B1 y soit reapparu ou non
+    # -- la valeur reste donc collee a tous les evenements suivants jusqu'au
+    # prochain $B1, pas seulement a celui qui vient de la fixer. Trouve par
+    # l'oracle (spec.md §5.7) : sans ca, un $B1 rencontre une fois ne
+    # s'appliquait qu'a l'evenement qui le portait, et tout le reste du flux
+    # avancait une ligne a la fois -- correct pour les premieres lignes,
+    # faux des que $B1 devait continuer a s'appliquer plus loin.
+    skip = 1
     while p < n and d[p] != 0x00:
         ev = {}
-        skip = 0
         effects_seen = []
 
         # -- balayage : commandes de prefixe et opcodes d'effet, jusqu'au
@@ -237,7 +295,14 @@ def _parse_channel_stream(d, start):
                     period = (d[p + 1] << 8) | d[p + 2]      # grand-boutien
                     ev["envelope"] = (etype, period)
                     p += 3
-                ev["sample"] = d[p]                # partage par $10 et $11-$1F
+                # Comme $F0-$FF : PT3Play.cs divise cet octet par 2
+                # (`Module[Address_In_Pattern] / 2`) -- oublie ici, ce qui
+                # lisait le double du bon indice d'echantillon. Trouve par
+                # l'oracle (spec.md §5.7) : $10-$1F pointait sur
+                # l'echantillon 6 (46 pas) au lieu du 3 (3 pas) reellement
+                # vise, avec un boitier "boucle == longueur" qui masquait
+                # le symptome au lieu de planter.
+                ev["sample"] = d[p] // 2
                 p += 1
             elif 0x20 <= b <= 0x3F:
                 ev["noise"] = b - 0x20
@@ -302,15 +367,20 @@ def _parse_channel_stream(d, start):
             ev.setdefault("effects", []).append(
                 (EFFECT_NAMES.get(eb, "effet-%#x" % eb), EFFECT_PARAMS[eb](d, p)))
             n_effects += 1
-            if eb == 0x08:
-                n_unapplied += 1
             p += EFFECT_PARAM_LEN[eb]
 
         rows.append(ev)
-        for _ in range(skip):
+        # $B1 : Number_Of_Notes_To_Skip=N devient Note_Skip_Counter=N APRES
+        # cette ligne (PT3Play.cs:526,645-646) ; le compteur est decremente
+        # a CHAQUE limite de ligne suivante et l'interpreteur ne rejoue
+        # qu'au moment ou il atteint 0 -- soit N-1 lignes vides apres
+        # celle-ci, pas N. Off-by-one trouve par l'oracle (spec.md §5.7) :
+        # une premiere version en ajoutait N, decalant tout d'une ligne des
+        # le premier $B1 rencontre dans un fichier reel.
+        for _ in range(max(0, skip - 1)):
             rows.append({})
 
-    return rows, n_effects, n_unapplied
+    return rows, n_effects
 
 
 def read(path):
@@ -320,10 +390,29 @@ def read(path):
 def parse(d):
     """Comme `read()`, mais depuis des octets deja en memoire -- ce qui
     permet aux tests (test/pt3_fixtures.py) de construire un module sans
-    passer par le disque."""
+    passer par le disque.
+
+    Ne valide que la signature et la taille minimale AVANT de commencer --
+    pas le contenu au-dela (meme limite, assumee, que le lecteur 6502 lui
+    -meme : cf. le README du depot). Un fichier tronque ou corrompu plus
+    loin dans le flux leve une erreur CLAIRE (fichier, offset) plutot
+    qu'une IndexError brute sans contexte -- une conversion ratee doit
+    dire pourquoi, pas juste planter."""
     if d[:13] != b"ProTracker 3.":
         raise ValueError("signature PT3 absente (pas un fichier .pt3 ?)")
+    if len(d) < 0xC9 + 1:            # en-tete + au moins le $FF de la liste
+        raise ValueError(
+            "fichier trop court pour un en-tete PT3 complet (%d o, "
+            "%d o minimum)" % (len(d), 0xC9 + 1))
+    try:
+        return _parse_body(d)
+    except (IndexError, struct.error) as e:
+        raise ValueError(
+            "PT3 tronque ou corrompu : %s a manque d'octets en le lisant "
+            "(%s)" % (type(e).__name__, e)) from e
 
+
+def _parse_body(d):
     version_byte = d[0x0D]
     version = version_byte - 0x30 if 0x30 <= version_byte <= 0x39 else 6
     name = d[0x1E:0x3E].rstrip(b"\x00 ").decode("latin-1", "replace")
@@ -375,16 +464,14 @@ def parse(d):
     # -- motifs : table de pointeurs (6 octets/motif : A,B,C x 16 bits) ---
     patterns = {}
     total_effects = 0
-    total_unapplied = 0
     for idx in set(order):
         base = pats_ptr + idx * 6
         chans = {}
         for ci, name_c in enumerate("ABC"):
             addr = _cstr16(d, base + ci * 2)
-            rows, nfx, nun = _parse_channel_stream(d, addr)
+            rows, nfx = _parse_channel_stream(d, addr)
             chans[name_c] = rows
             total_effects += nfx
-            total_unapplied += nun
         n_rows = max(len(chans[c]) for c in "ABC") if any(chans.values()) else 0
         for c in "ABC":
             if len(chans[c]) < n_rows:
@@ -397,7 +484,7 @@ def parse(d):
         "order": order, "loop_order": loop_order,
         "samples": samples, "ornaments": ornaments,
         "patterns": patterns,
-        "n_effects": total_effects, "n_effects_unapplied": total_unapplied,
+        "n_effects": total_effects,
     }
 
 
@@ -414,6 +501,10 @@ def _new_channel_state():
         "cur_ton_slide": 0,
         # vibrato ($05) -- PT3Play.cs:501-510
         "onoff_cur": 0, "onoff_delay": 0, "offon_delay": 0,
+        # route enveloppe ($08, AddToEnv) -- accumulateur par voie, meme
+        # forme que noise_slide (cf. docstring du module : plausible, pas
+        # verifie contre l'oracle).
+        "env_slide": 0,
     }
 
 
@@ -435,6 +526,18 @@ def to_apple(mod, max_frames=None):
 
     ch = {c: _new_channel_state() for c in "ABC"}
     chip_noise_base = [0]
+    # Route enveloppe ($08, effet glissement d'enveloppe) -- etat au niveau
+    # de la puce (un seul generateur d'enveloppe AY, partage par les 3
+    # voies), meme structure que le glissando de ton par voie
+    # (slide_delay/slide_count/cur_ton_slide) mais ici globale. Cf.
+    # docstring du module : implemente sur la base de la lecture de
+    # PT3Play.cs, mais PAS verifiable contre l'oracle (sa propre route
+    # enveloppe est confirmee cassee) -- reste "plausible", pas "prouve".
+    chip_env_base = [0]
+    chip_env_delay = [0]
+    chip_env_cur_delay = [0]
+    chip_env_slide_add = [0]
+    chip_env_cur_slide = [0]
 
     prev = {}
     out = []
@@ -452,12 +555,29 @@ def to_apple(mod, max_frames=None):
         mixer = 0
         chip_add_noise = 0
         any_noise = False
+        chip_add_env = 0
+
+        # Glissement d'enveloppe ($08) : compteur AU NIVEAU DE LA PUCE (pas
+        # par voie), meme mecanique que le glissando de ton (slide_count/
+        # slide_delay) mais une seule instance pour les 3 voies -- un seul
+        # generateur d'enveloppe materiel.
+        if chip_env_cur_delay[0] > 0:
+            chip_env_cur_delay[0] -= 1
+            if chip_env_cur_delay[0] == 0:
+                chip_env_cur_slide[0] += chip_env_slide_add[0]
+                chip_env_cur_delay[0] = chip_env_delay[0]
 
         for i, c in enumerate("ABC"):
             st = ch[c]
             if not st["on"]:
                 cur[8 + i] = 0
-                mixer |= (1 << i) | (1 << (i + 3))     # ton/bruit desactives
+                # PAS de bits mixer forces a 1 ici : verifie contre l'oracle
+                # (PT3Play.cs) qu'une voie inactive ne contribue RIEN au
+                # mixer (TempMixer part de 0 et le bloc entier est saute
+                # pour un canal Enabled=false) -- elle "semble" activee
+                # dans le registre, et c'est l'amplitude a 0 qui la tait
+                # reellement, pas le mixer. Le contraire (force a 1) faisait
+                # diverger r7 des la toute premiere trame.
             else:
                 sample = samples.get(st["sample"])
                 entry = _table_pos(sample, st["sam_pos"]) if sample else None
@@ -515,6 +635,18 @@ def to_apple(mod, max_frames=None):
                             st["noise_slide"] = add_noise
                         chip_add_noise = add_noise
                         any_noise = True
+                    else:                          # route enveloppe (AddToEnv)
+                        # Nibble signe (bit 0x20 du sample-data = signe) +
+                        # glissement par voie, replie en sbyte (-128..127)
+                        # comme le ferait l'accumulateur C# cote reference.
+                        # SOMME sur les voies (pas ecrasement, contrairement
+                        # au bruit) -- cf. docstring du module.
+                        raw = ((b0 >> 1) | 0xF0) if (b0 & 0x20) else ((b0 >> 1) & 0xF)
+                        j = raw + st["env_slide"]
+                        j = ((j + 0x80) & 0xFF) - 0x80
+                        chip_add_env += j
+                        if b1 & 0x20:
+                            st["env_slide"] = j
 
                     st["sam_pos"] += 1
                     if st["sam_pos"] >= len(sample["data"]):
@@ -537,14 +669,26 @@ def to_apple(mod, max_frames=None):
 
         cur[7] = mixer & 0x3F
         if any_noise:
-            cur[6] = (chip_noise_base[0] + chip_add_noise) & 0x1F
+            # Periode de bruit : rescale ZX -> Apple oublie (ym.py le fait
+            # deja pour le sien) -- transportait la valeur ZX brute telle
+            # quelle. Trouve par l'oracle sur summer.pt3 (spec.md §5.7).
+            noise_zx = (chip_noise_base[0] + chip_add_noise) & 0x1F
+            cur[6] = max(1, min(31, round(noise_zx * (APPLE_CLOCK / ZX_CLOCK)))) if noise_zx else 0
+        # r11/r12 (periode d'enveloppe) : ECRITE A CHAQUE TRAME desormais,
+        # pas seulement au declenchement -- chip_env_base a deja ete mis a
+        # jour par apply_row() au moment du declenchement (voir plus bas),
+        # et chip_add_env/chip_env_cur_slide la font vivre entre deux
+        # declenchements (route enveloppe des echantillons + effet $08).
+        # Reechelonnee comme les periodes de ton (§2.2) : sur 16 bits, pas
+        # 12, donc pas de clamp a 4095 ici.
+        env_zx = chip_env_base[0] + chip_add_env + chip_env_cur_slide[0]
+        per = _rescale(env_zx, bits=16)
+        cur[11] = per & 0xFF
+        cur[12] = (per >> 8) & 0xFF
         if env_trigger is not None:
-            shape, per = env_trigger      # stocke (etype, periode) au parsing
-            # Reechelonnee comme les periodes de ton (§2.2) : sur 16 bits,
-            # pas 12, donc pas de clamp a 4095 ici.
-            per = _rescale(per, bits=16)
-            cur[11] = per & 0xFF
-            cur[12] = (per >> 8) & 0xFF
+            shape, _per = env_trigger     # stocke (etype, periode) au parsing
+            # r13 (forme) : SEULEMENT a la trame de declenchement -- l'ecrire
+            # rearme le generateur materiel (test_envelope le verifie).
             cur[13] = shape & 0x0F
         delta = {r: v for r, v in cur.items() if r == 13 or prev.get(r) != v}
         prev.update(cur)
@@ -576,6 +720,18 @@ def to_apple(mod, max_frames=None):
             st["sample"] = ev["sample"]            # PAS de reset de sam_pos
         if "envelope" in ev:
             st["env_on"] = ev["envelope"] is not None
+            if ev["envelope"] is not None:
+                # Nouvelle commande d'enveloppe : la periode DEVIENT la
+                # nouvelle base (chip_env_base, en unites ZX -- reechelonne
+                # a l'emission comme le ton), et tout glissement en cours
+                # (effet ou echantillon) repart de zero -- meme logique que
+                # ton_acc/cur_ton_slide remis a zero sur une note. orn_pos
+                # est aussi remis a zero pour CETTE voie : elle porte la
+                # commande d'enveloppe, et son ornement doit repartir avec.
+                chip_env_base[0] = ev["envelope"][1]
+                chip_env_cur_slide[0] = 0
+                chip_env_cur_delay[0] = 0
+                st["orn_pos"] = 0
 
         speed_change = None
         for name, params in ev.get("effects", []):
@@ -608,8 +764,16 @@ def to_apple(mod, max_frames=None):
                 st["slide_count"] = 0; st["cur_ton_slide"] = 0
             elif name == "set-speed":
                 speed_change = params["speed"]
-            # "envelope-glissando" ($08) : compte comme effet ignore
-            # (cf. docstring du module), aucune action ici.
+            elif name == "envelope-glissando":
+                # Meme mecanique que le glissando de ton ($01), mais au
+                # niveau de la puce (chip_env_*, pas st[...]) -- un seul
+                # generateur d'enveloppe pour les 3 voies. "or 1" ne
+                # s'applique qu'a l'amorce, comme pour le ton : si delay=0,
+                # le compteur suivant peut se figer a 0 -- reproduit tel
+                # quel (cf. glissando de ton plus haut), pas corrige.
+                chip_env_delay[0] = params["delay"]
+                chip_env_cur_delay[0] = params["delay"] or 1
+                chip_env_slide_add[0] = params["add"]
         return speed_change
 
     # Un seul passage lineaire dans `order` : c'est au LECTEUR 6502 de
