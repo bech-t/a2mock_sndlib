@@ -9,13 +9,9 @@ d'octets :
 | Menuet en sol | 626 o | **235 o** | 11 s |
 | Ode à la joie | 627 o | **250 o** | 16 s |
 | Für Elise | 660 o | **268 o** | 13 s |
-| Café arabe (3 voix) | 2 302 o | **902 o** | 56 s |
-| Fée Dragée (3 voix) | 2 748 o | **966 o** | 39 s |
+ voix
 
-À titre de comparaison, la même Fée Dragée en réduction d'orchestre à six voix
-pèse 4 857 octets, et un dump YM d'Atari 12 657 pour cinquante secondes.
-
-Trois raisons à cet écart :
+Trois raisons à cet solution :
 
 - **trois voix, une seule puce** — l'AY #2 reste libre pour les bruitages,
   ce qui est la configuration d'un jeu ;

@@ -13,60 +13,6 @@ libre, sur sa propre page :
 Les quatre fichiers ci-dessous sont tous listés « original » sur sa page —
 pas des covers, pas des collaborations (contrairement par exemple à
 `megamix.pt3`, juste à côté, fait *avec* Alone Coder, et donc volontairement
-absent d'ici).
-
-## Quatre, pas huit
-
-Le premier jet en gardait huit, chacun tronqué à quelques secondes pour
-tenir sur la disquette. À l'écoute, deux d'entre eux (`mehalanholia.pt3`,
-`hard.pt3`) sonnaient faux plus souvent que les six autres — et ce sont
-précisément les deux dont `pt3.table_anchor()` signalait déjà un ancrage de
-justesse peu fiable (`(ancrage incertain, +13c)`, visible via
-`make pt3corpus`) : leur table de fréquence (famille ASM, `freq_table=2`) ne
-s'aligne sur aucune grille 12-TET à mieux que 13 cents, contre les tables
-« ST » (`freq_table=1`) des six autres, précises à moins d'un cent — cf.
-`spec.md` §5.7 pour le détail de cette mesure. Écartés pour cette raison,
-pas juste raccourcis : allonger un morceau qui sonne faux ne le rend pas
-juste.
-
-`kakvsegda.pt3` et `199Xnostalgy.pt3` sont écartés pour une raison
-différente — libérer assez de marge disque pour que les quatre qui restent
-jouent **entiers ou presque**, plutôt que huit extraits de dix secondes.
-`oldlove.pt3` (le moins cher à l'octet du lot) joue maintenant en entier ;
-les trois autres vont aussi loin que le budget le permet, toujours au-delà
-de leur point de bouclage naturel.
-
-Les quatre `.pt3` écartés restent de bons candidats si la marge disque
-s'agrandit un jour (nouveau gabarit, compression) — rien dans leur contenu
-ne les disqualifie, à part la justesse pour les deux premiers.
-
-## Pourquoi ce fichier existe séparément de `test/pt3_corpus/SOURCES.md`
-
-Les huit `.pt3` d'origine (les quatre d'ici, plus les quatre écartés) sont
-*aussi* dans `test/pt3_corpus/`, avec son propre `SOURCES.md` — duplication
-assumée, pas un oubli. `test/pt3_corpus/` sert à éprouver le
-**convertisseur** (`tools/a2mconv/pt3.py`) sur un corpus large : il ne doit
-pas bouger si la démo change sa sélection. `demo/pt3/` sert la **vitrine** :
-même séparation déjà en place entre `demo/midi/` et tout ce qui teste
-`midi2a2m.py`.
-
-## Ce que le dépôt fait de ces fichiers
-
-| | |
-|---|---|
-| les `.pt3` eux-mêmes | **jamais versionnés, jamais redistribués** (cf. `.gitignore`). Fichiers tiers ; les recopier ici n'apporterait rien et ce ne sont pas nos droits. |
-| les `.A2M` qui en dérivent | **publiés** sur la disquette de démonstration, dans `PT3/`. |
-
-`make music`/`make dsk` échouent bruyamment si un fichier manque — pas de
-saut silencieux. Pour les récupérer :
-
-```sh
-cd demo/pt3
-curl -L -o oldlove.pt3       https://shiru.untergrund.net/files/mus/ay/original/oldlove.pt3
-curl -L -o moonlight.pt3     https://shiru.untergrund.net/files/mus/ay/original/moonlight.pt3
-curl -L -o chinesewatch.pt3  https://shiru.untergrund.net/files/mus/ay/original/chinesewatch.pt3
-curl -L -o summer.pt3        https://shiru.untergrund.net/files/mus/ay/original/summer.pt3
-```
 
 ## Détail
 
